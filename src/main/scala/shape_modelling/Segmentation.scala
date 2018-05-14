@@ -115,7 +115,7 @@ object Segmentation {
     val posteriorEvaluator = ProductEvaluator(MCMC.ShapePriorEvaluator(asm.statisticalModel), IntensityBasedLikeliHoodEvaluator(asm, prepImg))
 
     // Deviations should match deviations of model
-    val poseGenerator =  MixtureProposal.fromProposalsWithTransition((0.95, ShapeUpdateProposal(asm.statisticalModel.rank, 0.025f)), (0.05, ShapeUpdateProposal(asm.statisticalModel.rank, 0.2f)))(rnd=new Random())
+    val poseGenerator =  MixtureProposal.fromProposalsWithTransition((0.99, ShapeUpdateProposal(asm.statisticalModel.rank, 0.005f)), (0.01, ShapeUpdateProposal(asm.statisticalModel.rank, 0.2f)))(rnd=new Random())
 
     val chain = MetropolisHastings(poseGenerator, posteriorEvaluator, logger)(new Random())
 
@@ -132,6 +132,7 @@ object Segmentation {
     }
 
     // TODO - what is burn in factor, how to get rid of it (thats why drop is here)
-    samplingIterator.drop(1000).take(5000).toIndexedSeq
+    // http://background.uchicago.edu/~whu/Courses/Ast321_11/Projects/mcmc_helsby.pdf
+    samplingIterator.drop(500).take(5000).toIndexedSeq
   }
 }
