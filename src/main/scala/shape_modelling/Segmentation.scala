@@ -106,7 +106,7 @@ object Segmentation {
       }
     }
 
-    val samples = UniformSampler(image.domain.boundingBox, 1000).sample.map(i => i._1)
+    System.out.println("Preprocessing image...")
 
     val prepImg = asm.preprocessor(image)
 
@@ -115,23 +115,23 @@ object Segmentation {
     val posteriorEvaluator = ProductEvaluator(MCMC.ShapePriorEvaluator(asm.statisticalModel), IntensityBasedLikeliHoodEvaluator(asm, prepImg))
 
     // Deviations should match deviations of model
-    val poseGenerator =  MixtureProposal.fromProposalsWithTransition((0.7, ShapeUpdateProposal(asm.statisticalModel.rank, 0.1f)), (0.2, ShapeUpdateProposal(asm.statisticalModel.rank, 0.2f)), (0.1, ShapeUpdateProposal(asm.statisticalModel.rank, 0.3f)))(rnd=new Random())
+    val poseGenerator =  MixtureProposal.fromProposalsWithTransition((0.8, ShapeUpdateProposal(asm.statisticalModel.rank, 0.1f)), (0.2, ShapeUpdateProposal(asm.statisticalModel.rank, 0.2f)))(rnd=new Random())
 
     val chain = MetropolisHastings(poseGenerator, posteriorEvaluator, logger)(new Random())
 
     val initialParameters = ShapeParameters(DenseVector.zeros[Float](3), DenseVector.zeros[Float](3), DenseVector.zeros[Float](asm.statisticalModel.rank))
     val mhIt = chain.iterator(initialParameters)
 
-    val rigidTransSpace = RigidTransformationSpace[_3D]()
-    var bestCoefs : ShapeParameters = null
-    var bestProb : Double = Double.NegativeInfinity
     var lastCoefs = initialParameters
+
     val samplingIterator = for(theta <- mhIt) yield {
       if (lastCoefs != theta) {
         ui.setCoefficientsOf("model", theta.modelCoefficients)
+        lastCoefs = theta
       }
     }
 
-    samplingIterator.drop(500).take(4000).toIndexedSeq
+    // TODO - what is burn in factor, how to get rid of it (thats why drop is here)
+    samplingIterator.drop(1000).take(5000).toIndexedSeq
   }
 }
