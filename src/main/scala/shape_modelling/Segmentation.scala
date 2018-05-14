@@ -32,13 +32,13 @@ object Segmentation {
     // Your application code goes below here. Below is a dummy application that reads a mesh and displays it
 
     // create a visualization window
-    ui = ScalismoUI()
+    //ui = ScalismoUI()
 
     val asm = ActiveShapeModelIO.readActiveShapeModel(new File("handedData/femur-asm.h5")).get
     val image = ImageIO.read3DScalarImage[Short](new File("handedData/targets/37.nii")).get.map(_.toFloat)
 
-    ui.show(asm.statisticalModel, "model")
-    ui.show(image, "image")
+    //ui.show(asm.statisticalModel, "model")
+    //ui.show(image, "image")
 
     //runPoseFitting(asm, image)
     runShapeFitting(asm, image)
@@ -115,7 +115,7 @@ object Segmentation {
     val posteriorEvaluator = ProductEvaluator(MCMC.ShapePriorEvaluator(asm.statisticalModel), IntensityBasedLikeliHoodEvaluator(asm, prepImg))
 
     // Deviations should match deviations of model
-    val poseGenerator =  MixtureProposal.fromProposalsWithTransition((0.8, ShapeUpdateProposal(asm.statisticalModel.rank, 0.1f)), (0.2, ShapeUpdateProposal(asm.statisticalModel.rank, 0.2f)))(rnd=new Random())
+    val poseGenerator =  MixtureProposal.fromProposalsWithTransition((0.95, ShapeUpdateProposal(asm.statisticalModel.rank, 0.025f)), (0.05, ShapeUpdateProposal(asm.statisticalModel.rank, 0.2f)))(rnd=new Random())
 
     val chain = MetropolisHastings(poseGenerator, posteriorEvaluator, logger)(new Random())
 
@@ -126,7 +126,7 @@ object Segmentation {
 
     val samplingIterator = for(theta <- mhIt) yield {
       if (lastCoefs != theta) {
-        ui.setCoefficientsOf("model", theta.modelCoefficients)
+        //ui.setCoefficientsOf("model", theta.modelCoefficients)
         lastCoefs = theta
       }
     }
