@@ -114,7 +114,8 @@ object Segmentation {
 
     val posteriorEvaluator = ProductEvaluator(MCMC.ShapePriorEvaluator(asm.statisticalModel), IntensityBasedLikeliHoodEvaluator(asm, prepImg))
 
-    val poseGenerator =  MixtureProposal.fromProposalsWithTransition((0.8, ShapeUpdateProposal(asm.statisticalModel.rank, 0.05f)), (0.15, ShapeUpdateProposal(asm.statisticalModel.rank, 0.2f)), (0.05, ShapeUpdateProposal(asm.statisticalModel.rank, 2f)))(rnd=new Random())
+    // Deviations should match deviations of model
+    val poseGenerator =  MixtureProposal.fromProposalsWithTransition((0.7, ShapeUpdateProposal(asm.statisticalModel.rank, 0.1f)), (0.2, ShapeUpdateProposal(asm.statisticalModel.rank, 0.2f)), (0.1, ShapeUpdateProposal(asm.statisticalModel.rank, 0.3f)))(rnd=new Random())
 
     val chain = MetropolisHastings(poseGenerator, posteriorEvaluator, logger)(new Random())
 
@@ -133,19 +134,4 @@ object Segmentation {
 
     samplingIterator.drop(500).take(4000).toIndexedSeq
   }
-
-//  class MultiThreadHastings[A] protected(override val generator: ProposalGenerator[A] with TransitionRatio[A],
-//                                         override val evaluator: DistributionEvaluator[A],
-//                                         override val logger: AcceptRejectLogger[A])
-//                                     (implicit override val random: Random) extends MetropolisHastings[A] (generator: ProposalGenerator[A] with TransitionRatio[A],
-//    evaluator: DistributionEvaluator[A], logger: AcceptRejectLogger[A]) {
-//
-//    override def next(current: A): A = {
-//      super.next(current)
-//    }
-//
-//    override def iterator(current: A): Iterator[A] = {
-//
-//    }
-//  }
 }
