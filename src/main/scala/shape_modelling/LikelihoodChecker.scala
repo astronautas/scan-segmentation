@@ -11,9 +11,7 @@ object LikelihoodChecker {
   def likelihoodThatMeshFitsImage(asm: ActiveShapeModel, mesh: TriangleMesh, preprocessedImage: PreprocessedImage): Double = {
 
     val ids = asm.profiles.ids
-
     var parList = ArrayBuffer.fill(ids.length)(Double.NegativeInfinity)
-
 
     asm.profiles.ids.par.zipWithIndex foreach { case (id, i) =>
       val profile = asm.profiles(id)
@@ -50,6 +48,7 @@ object LikelihoodChecker {
     //    }
 
     // Point fitting is independent, just return probability sum (~ the higher probability, the better)
+
     parList.sum
   }
 

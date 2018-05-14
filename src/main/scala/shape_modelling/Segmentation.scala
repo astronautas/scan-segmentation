@@ -115,11 +115,11 @@ object Segmentation {
     val posteriorEvaluator = ProductEvaluator(MCMC.ShapePriorEvaluator(asm.statisticalModel), IntensityBasedLikeliHoodEvaluator(asm, prepImg))
 
     // Deviations should match deviations of model
-    val poseGenerator =  MixtureProposal.fromProposalsWithTransition((0.99, ShapeUpdateProposal(asm.statisticalModel.rank, 0.005f)), (0.01, ShapeUpdateProposal(asm.statisticalModel.rank, 0.2f)))(rnd=new Random())
+    val poseGenerator =  MixtureProposal.fromProposalsWithTransition((0.9, ShapeUpdateProposal(asm.statisticalModel.rank, 0.005f)), (0.1, ShapeUpdateProposal(asm.statisticalModel.rank, 200f)))(rnd=new Random())
 
     val chain = MetropolisHastings(poseGenerator, posteriorEvaluator, logger)(new Random())
 
-    val initialParameters = ShapeParameters(DenseVector.zeros[Float](3), DenseVector.zeros[Float](3), DenseVector.zeros[Float](asm.statisticalModel.rank))
+    val initialParameters = ShapeParameters(DenseVector.zeros[Float](3), DenseVector.zeros[Float](3), asm.statisticalModel.coefficients(asm.statisticalModel.mean))
     val mhIt = chain.iterator(initialParameters)
 
     var lastCoefs = initialParameters
