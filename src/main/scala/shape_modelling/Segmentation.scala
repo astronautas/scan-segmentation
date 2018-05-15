@@ -48,7 +48,7 @@ object Segmentation {
     //runPoseFitting(asm, image)
     var coeffs = ShapeParameters(DenseVector.zeros[Float](3), DenseVector.zeros[Float](3), asm.statisticalModel.coefficients(asm.statisticalModel.mean))
 
-    0 until coeffs.modelCoefficients.length / 5 foreach(i => {
+    0 until coeffs.modelCoefficients.length foreach(i => {
       coeffs = runShapeFittingForComponents(asm, prepImg, coeffs, i)
     })
 
@@ -93,7 +93,7 @@ object Segmentation {
 
     }
 
-    samplingIterator.take(20).toIndexedSeq
+    samplingIterator.take(40).toIndexedSeq
   }
 
   def runShapeFittingForComponents(asm: ActiveShapeModel, prepImg : PreprocessedImage, initialParameters : ShapeParameters, tillComponentIndex: Int): ShapeParameters = {
@@ -122,23 +122,23 @@ object Segmentation {
     val posteriorEvaluator = ProductEvaluator(MCMC.ShapePriorEvaluator(asm.statisticalModel), IntensityBasedLikeliHoodEvaluator(asm, prepImg))
 
     // Deviations should match deviations of model
-    val poseGenerator =  MixtureProposal.fromProposalsWithTransition((0.8, ShapeUpdateProposalFirstComponents(asm.statisticalModel.rank, 1f, tillComponentIndex)), (0.2, ShapeUpdateProposalFirstComponents(asm.statisticalModel.rank, 2f, tillComponentIndex)))(rnd=new Random())
+    val poseGenerator =  MixtureProposal.fromProposalsWithTransition((0.8, ShapeUpdateProposalFirstComponents(asm.statisticalModel.rank, 0.09f, tillComponentIndex)), (0.2, ShapeUpdateProposalFirstComponents(asm.statisticalModel.rank, 0.2f, tillComponentIndex)))(rnd=new Random())
 
     val chain = MetropolisHastings(poseGenerator, posteriorEvaluator, logger)(new Random())
 
     val mhIt = chain.iterator(initialParameters)
 
-    var lastCoefs = initialParameters
-
     val samplingIterator = for(theta <- mhIt) yield {
-      lastCoefs = theta
+      theta
     }
 
     // TODO - what is burn in factor, how to get rid of it (thats why drop is here)
     // http://background.uchicago.edu/~whu/Courses/Ast321_11/Projects/mcmc_helsby.pdf
-    samplingIterator.take(30).toIndexedSeq
+    val take = 200
+    val samples = samplingIterator.drop(take / 12).take(take)
+    val bestSample = samples.maxBy(posteriorEvaluator.logValue)
 
-    lastCoefs
+    bestSample
   }
 
   def runShapeFitting(asm: ActiveShapeModel, prepImg : PreprocessedImage, initialParameters : ShapeParameters): ShapeParameters = {
@@ -166,22 +166,24 @@ object Segmentation {
     val posteriorEvaluator = ProductEvaluator(MCMC.ShapePriorEvaluator(asm.statisticalModel), IntensityBasedLikeliHoodEvaluator(asm, prepImg))
 
     // Deviations should match deviations of model
-    val poseGenerator =  MixtureProposal.fromProposalsWithTransition((0.7, ShapeUpdateProposal(asm.statisticalModel.rank, 0.1f)), (0.3, ShapeUpdateProposal(asm.statisticalModel.rank, 0.05f)))(rnd=new Random())
+    val poseGenerator =  MixtureProposal.fromProposalsWithTransition((0.7, ShapeUpdateProposal(asm.statisticalModel.rank, 0.05f)), (0.3, ShapeUpdateProposal(asm.statisticalModel.rank, 1f)))(rnd=new Random())
 
     val chain = MetropolisHastings(poseGenerator, posteriorEvaluator, logger)(new Random())
 
     val mhIt = chain.iterator(initialParameters)
 
-    var lastCoefs = initialParameters
-
     val samplingIterator = for(theta <- mhIt) yield {
-      lastCoefs = theta
+      theta
     }
+
+    val take = 200
+    val samples = samplingIterator.drop(take / 12).take(take)
+    val bestSample = samples.maxBy(posteriorEvaluator.logValue)
 
     // TODO - what is burn in factor, how to get rid of it (thats why drop is here)
     // http://background.uchicago.edu/~whu/Courses/Ast321_11/Projects/mcmc_helsby.pdf
-    samplingIterator.take(500).toIndexedSeq
+    samplingIterator.take(2000).toIndexedSeq
 
-    lastCoefs
+    bestSample
   }
 }
