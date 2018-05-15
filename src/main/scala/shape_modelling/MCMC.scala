@@ -45,36 +45,13 @@ object MCMC {
   case class ShapeUpdateProposal(paramVectorSize: Int, stdev: Float) extends
     ProposalGenerator[ShapeParameters] with TransitionProbability[ShapeParameters] with SymmetricTransition[ShapeParameters] {
 
-    var paramVSize = paramVectorSize
-    var stdevThis = stdev
-
-    var perturbationDistr = new MultivariateNormalDistribution(DenseVector.zeros(paramVectorSize),
+    val perturbationDistr = new MultivariateNormalDistribution(DenseVector.zeros(paramVectorSize),
       DenseMatrix.eye[Float](paramVectorSize) * stdev)
 
-    var annealingOps = 40f
-
-    var annealingePerturbationDistr = new MultivariateNormalDistribution(DenseVector.zeros(paramVSize),
-      DenseMatrix.eye[Float](paramVSize) * stdevThis * annealingOps)
-
-    // TODO - here's sort of step that initially makes huge "jumps", and then cooldowns to normal jumps
-    // should help for fastening convergence
     override def propose(theta: ShapeParameters): ShapeParameters = {
-
-      if (annealingOps != 0) {
-        annealingePerturbationDistr = new MultivariateNormalDistribution(DenseVector.zeros(paramVSize),
-          DenseMatrix.eye[Float](paramVSize) * stdevThis * annealingOps)
-
-        annealingOps -= 1
-
-        val perturbation = annealingePerturbationDistr.sample()
-        val thetaPrime = ShapeParameters(theta.rotationParameters, theta.translationParameters, theta.modelCoefficients + perturbation)
-
-        thetaPrime
-      } else {
-        val perturbation = perturbationDistr.sample()
-        val thetaPrime = ShapeParameters(theta.rotationParameters, theta.translationParameters, theta.modelCoefficients + perturbation)
-        thetaPrime
-      }
+      val perturbation = perturbationDistr.sample()
+      val thetaPrime = ShapeParameters(theta.rotationParameters, theta.translationParameters, theta.modelCoefficients + perturbationDistr.sample)
+      thetaPrime
     }
 
     override def logTransitionProbability(from: ShapeParameters, to: ShapeParameters) = {
