@@ -1,0 +1,444 @@
+#
+# A fatal error has been detected by the Java Runtime Environment:
+#
+#  EXCEPTION_ACCESS_VIOLATION (0xc0000005) at pc=0x0000000066a4d9a8, pid=7100, tid=0x00000000000004a0
+#
+# JRE version: Java(TM) SE Runtime Environment (8.0_121-b13) (build 1.8.0_121-b13)
+# Java VM: Java HotSpot(TM) 64-Bit Server VM (25.121-b13 mixed mode windows-amd64 compressed oops)
+# Problematic frame:
+# C  0x0000000066a4d9a8
+#
+# Failed to write core dump. Minidumps are not enabled by default on client versions of Windows
+#
+# If you would like to submit a bug report, please visit:
+#   http://bugreport.java.com/bugreport/crash.jsp
+#
+
+---------------  T H R E A D  ---------------
+
+Current thread (0x000000001a98d800):  JavaThread "C2 CompilerThread0" daemon [_thread_in_native, id=1184, stack(0x000000001ab90000,0x000000001ac90000)]
+
+siginfo: ExceptionCode=0xc0000005, ExceptionInformation=0x0000000000000008 0x0000000066a4d9a8
+
+Registers:
+RAX=0x0000000066a4da10, RBX=0x000000001ac8c3f0, RCX=0x000000001b541c10, RDX=0x0000000065320508
+RSP=0x000000001ac8c1a8, RBP=0x0000000065320508, RSI=0x0000000000000000, RDI=0x000000001b541c10
+R8 =0x0000000000000056, R9 =0x0000000000001000, R10=0x000000001d4c55d0, R11=0x000000006531fe40
+R12=0x0000000065320508, R13=0x000000001ac8c3f0, R14=0x000000001ac8c2d8, R15=0x0000000000000000
+RIP=0x0000000066a4d9a8, EFLAGS=0x0000000000010202
+
+Top of Stack: (sp=0x000000001ac8c1a8)
+0x000000001ac8c1a8:   0000000074b999c5 0000000000000000
+0x000000001ac8c1b8:   000000001ac8c2d8 000000001ac8c3f0
+0x000000001ac8c1c8:   ffffffffffffffff ffffffffffffffff
+0x000000001ac8c1d8:   0000000074b9aa95 000000001ac8c3f0
+0x000000001ac8c1e8:   0000000000000001 000000001ac8c238
+0x000000001ac8c1f8:   000000001ac8c238 00001d8700000445
+0x000000001ac8c208:   0000000000000000 0000000000000007
+0x000000001ac8c218:   000000001cf9fe30 000000001916c180
+0x000000001ac8c228:   00000000693efc30 00000000693f4aa8
+0x000000001ac8c238:   00000000693ecac0 000000001ac8c2d9
+0x000000001ac8c248:   0000000074b9b90c 000000001ac8c3f0
+0x000000001ac8c258:   000000000000015a 000000001916c180
+0x000000001ac8c268:   00000000693f4ac0 000000001c91abb8
+0x000000001ac8c278:   000000001c91ad08 0000000000000000
+0x000000001ac8c288:   0000000000000000 0000000000000000
+0x000000001ac8c298:   0000000000000000 0000000000000000 
+
+Instructions: (pc=0x0000000066a4d9a8)
+0x0000000066a4d988:   00 d9 a4 66 00 00 00 00 00 00 00 00 00 00 00 00
+0x0000000066a4d998:   00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+0x0000000066a4d9a8:   48 7a d7 74 00 00 00 00 f8 d9 a4 66 00 00 00 00
+0x0000000066a4d9b8:   20 df a4 66 00 00 00 00 03 00 00 00 03 00 00 00 
+
+
+Register to memory mapping:
+
+RAX=0x0000000066a4da10 is an unknown value
+RBX=0x000000001ac8c3f0 is pointing into the stack for thread: 0x000000001a98d800
+RCX=0x000000001b541c10 is an unknown value
+RDX=0x0000000065320508 is an unknown value
+RSP=0x000000001ac8c1a8 is pointing into the stack for thread: 0x000000001a98d800
+RBP=0x0000000065320508 is an unknown value
+RSI=0x0000000000000000 is an unknown value
+RDI=0x000000001b541c10 is an unknown value
+R8 =0x0000000000000056 is an unknown value
+R9 =0x0000000000001000 is an unknown value
+R10=0x000000001d4c55d0 is an unknown value
+R11=0x000000006531fe40 is an unknown value
+R12=0x0000000065320508 is an unknown value
+R13=0x000000001ac8c3f0 is pointing into the stack for thread: 0x000000001a98d800
+R14=0x000000001ac8c2d8 is pointing into the stack for thread: 0x000000001a98d800
+R15=0x0000000000000000 is an unknown value
+
+
+Stack: [0x000000001ab90000,0x000000001ac90000],  sp=0x000000001ac8c1a8,  free space=1008k
+Native frames: (J=compiled Java code, j=interpreted, Vv=VM code, C=native code)
+C  0x0000000066a4d9a8
+
+
+Current CompileTask:
+C2:  25015 3293       4       scalismo.mesh.kdtree.KDTreeNode$::buildTreeNode (200 bytes)
+
+
+---------------  P R O C E S S  ---------------
+
+Java Threads: ( => current thread )
+  0x000000001cbef800 JavaThread "main-SharedResourceRunner" daemon [_thread_blocked, id=10756, stack(0x000000001e150000,0x000000001e250000)]
+  0x000000001b409800 JavaThread "AWT-Windows" daemon [_thread_in_native, id=1344, stack(0x000000001c2b0000,0x000000001c3b0000)]
+  0x000000001b3ba000 JavaThread "Java2D Disposer" daemon [_thread_blocked, id=1764, stack(0x000000001c0b0000,0x000000001c1b0000)]
+  0x000000001aa22800 JavaThread "Service Thread" daemon [_thread_blocked, id=11548, stack(0x000000001ae90000,0x000000001af90000)]
+  0x000000001a990000 JavaThread "C1 CompilerThread2" daemon [_thread_blocked, id=5636, stack(0x000000001ad90000,0x000000001ae90000)]
+  0x000000001a98e800 JavaThread "C2 CompilerThread1" daemon [_thread_in_native, id=1036, stack(0x000000001ac90000,0x000000001ad90000)]
+=>0x000000001a98d800 JavaThread "C2 CompilerThread0" daemon [_thread_in_native, id=1184, stack(0x000000001ab90000,0x000000001ac90000)]
+  0x000000001a9b3000 JavaThread "Monitor Ctrl-Break" daemon [_thread_in_native, id=4488, stack(0x000000001aa90000,0x000000001ab90000)]
+  0x0000000019137000 JavaThread "Attach Listener" daemon [_thread_blocked, id=11856, stack(0x000000001a590000,0x000000001a690000)]
+  0x0000000019134000 JavaThread "Signal Dispatcher" daemon [_thread_blocked, id=4484, stack(0x000000001a490000,0x000000001a590000)]
+  0x000000001911f000 JavaThread "Finalizer" daemon [_thread_blocked, id=920, stack(0x000000001a390000,0x000000001a490000)]
+  0x0000000004796000 JavaThread "Reference Handler" daemon [_thread_blocked, id=5124, stack(0x000000001a290000,0x000000001a390000)]
+  0x000000000459d800 JavaThread "main" [_thread_in_Java, id=7652, stack(0x0000000004200000,0x0000000004300000)]
+
+Other Threads:
+  0x00000000190f7800 VMThread [stack: 0x000000001a190000,0x000000001a290000] [id=8432]
+  0x000000001aa89800 WatcherThread [stack: 0x000000001b790000,0x000000001b890000] [id=6388]
+
+VM state:not at safepoint (normal execution)
+
+VM Mutex/Monitor currently owned by a thread: None
+
+Heap:
+ PSYoungGen      total 342528K, used 291710K [0x00000000d6d00000, 0x00000000ed400000, 0x0000000100000000)
+  eden space 341504K, 85% used [0x00000000d6d00000,0x00000000e89bf978,0x00000000eba80000)
+  from space 1024K, 12% used [0x00000000eba80000,0x00000000ebaa0000,0x00000000ebb80000)
+  to   space 1024K, 0% used [0x00000000ed300000,0x00000000ed300000,0x00000000ed400000)
+ ParOldGen       total 1086976K, used 868904K [0x0000000084600000, 0x00000000c6b80000, 0x00000000d6d00000)
+  object space 1086976K, 79% used [0x0000000084600000,0x00000000b968a398,0x00000000c6b80000)
+ Metaspace       used 48923K, capacity 49165K, committed 49280K, reserved 1093632K
+  class space    used 5571K, capacity 5661K, committed 5760K, reserved 1048576K
+
+Card table byte_map: [0x0000000013b60000,0x0000000013f40000] byte_map_base: 0x000000001373d000
+
+Marking Bits: (ParMarkBitMap*) 0x0000000074f2b6d0
+ Begin Bits: [0x00000000145e0000, 0x00000000164c8000)
+ End Bits:   [0x00000000164c8000, 0x00000000183b0000)
+
+Polling page: 0x0000000002680000
+
+CodeCache: size=245760Kb used=10128Kb max_used=10140Kb free=235631Kb
+ bounds [0x00000000047a0000, 0x00000000051a0000, 0x00000000137a0000]
+ total_blobs=4957 nmethods=3311 adapters=1556
+ compilation: enabled
+
+Compilation events (10 events):
+Event: 24.961 Thread 0x000000001a98e800 nmethod 3460 0x0000000005187a90 code [0x0000000005187c00, 0x0000000005187de8]
+Event: 24.961 Thread 0x000000001a98e800 3462       4       breeze.linalg.DenseVector$$anon$16::map (10 bytes)
+Event: 24.962 Thread 0x000000001a98e800 nmethod 3462 0x0000000005187790 code [0x00000000051878e0, 0x00000000051879a8]
+Event: 24.962 Thread 0x000000001a98e800 3463       4       breeze.linalg.DenseVector::values (5 bytes)
+Event: 24.964 Thread 0x000000001a98e800 nmethod 3463 0x0000000005187350 code [0x00000000051874a0, 0x0000000005187638]
+Event: 24.964 Thread 0x000000001a98e800 3464       4       breeze.linalg.DenseVector::map (7 bytes)
+Event: 24.966 Thread 0x000000001a98e800 nmethod 3464 0x0000000005190690 code [0x0000000005190800, 0x0000000005190948]
+Event: 24.966 Thread 0x000000001a98e800 3466       4       breeze.linalg.DenseVector::map$mcF$sp (7 bytes)
+Event: 24.969 Thread 0x000000001a98e800 nmethod 3466 0x0000000005190c90 code [0x0000000005190e00, 0x0000000005190f68]
+Event: 24.969 Thread 0x000000001a98e800 3467       4       scalismo.statisticalmodel.DiscreteLowRankGaussianProcess$$anonfun$scalismo$statisticalmodel$DiscreteLowRankGaussianProcess$$genericRegressionComputations$2$$anonfun$apply$12::apply (9 bytes)
+
+GC Heap History (10 events):
+Event: 23.749 GC heap before
+{Heap before GC invocations=75 (full 6):
+ PSYoungGen      total 299520K, used 298080K [0x00000000d6d00000, 0x00000000e9400000, 0x0000000100000000)
+  eden space 297984K, 100% used [0x00000000d6d00000,0x00000000e9000000,0x00000000e9000000)
+  from space 1536K, 6% used [0x00000000e9180000,0x00000000e9198000,0x00000000e9300000)
+  to   space 1536K, 0% used [0x00000000e9000000,0x00000000e9000000,0x00000000e9180000)
+ ParOldGen       total 1086976K, used 868888K [0x0000000084600000, 0x00000000c6b80000, 0x00000000d6d00000)
+  object space 1086976K, 79% used [0x0000000084600000,0x00000000b9686398,0x00000000c6b80000)
+ Metaspace       used 48537K, capacity 48781K, committed 48896K, reserved 1093632K
+  class space    used 5505K, capacity 5597K, committed 5632K, reserved 1048576K
+Event: 23.753 GC heap after
+Heap after GC invocations=75 (full 6):
+ PSYoungGen      total 299520K, used 96K [0x00000000d6d00000, 0x00000000ea680000, 0x0000000100000000)
+  eden space 297984K, 0% used [0x00000000d6d00000,0x00000000d6d00000,0x00000000e9000000)
+  from space 1536K, 6% used [0x00000000e9000000,0x00000000e9018000,0x00000000e9180000)
+  to   space 1024K, 0% used [0x00000000ea580000,0x00000000ea580000,0x00000000ea680000)
+ ParOldGen       total 1086976K, used 868904K [0x0000000084600000, 0x00000000c6b80000, 0x00000000d6d00000)
+  object space 1086976K, 79% used [0x0000000084600000,0x00000000b968a398,0x00000000c6b80000)
+ Metaspace       used 48537K, capacity 48781K, committed 48896K, reserved 1093632K
+  class space    used 5505K, capacity 5597K, committed 5632K, reserved 1048576K
+}
+Event: 23.943 GC heap before
+{Heap before GC invocations=76 (full 6):
+ PSYoungGen      total 299520K, used 298080K [0x00000000d6d00000, 0x00000000ea680000, 0x0000000100000000)
+  eden space 297984K, 100% used [0x00000000d6d00000,0x00000000e9000000,0x00000000e9000000)
+  from space 1536K, 6% used [0x00000000e9000000,0x00000000e9018000,0x00000000e9180000)
+  to   space 1024K, 0% used [0x00000000ea580000,0x00000000ea580000,0x00000000ea680000)
+ ParOldGen       total 1086976K, used 868904K [0x0000000084600000, 0x00000000c6b80000, 0x00000000d6d00000)
+  object space 1086976K, 79% used [0x0000000084600000,0x00000000b968a398,0x00000000c6b80000)
+ Metaspace       used 48537K, capacity 48781K, committed 48896K, reserved 1093632K
+  class space    used 5505K, capacity 5597K, committed 5632K, reserved 1048576K
+Event: 23.947 GC heap after
+Heap after GC invocations=76 (full 6):
+ PSYoungGen      total 320000K, used 128K [0x00000000d6d00000, 0x00000000ea700000, 0x0000000100000000)
+  eden space 318976K, 0% used [0x00000000d6d00000,0x00000000d6d00000,0x00000000ea480000)
+  from space 1024K, 12% used [0x00000000ea580000,0x00000000ea5a0000,0x00000000ea680000)
+  to   space 1024K, 0% used [0x00000000ea480000,0x00000000ea480000,0x00000000ea580000)
+ ParOldGen       total 1086976K, used 868904K [0x0000000084600000, 0x00000000c6b80000, 0x00000000d6d00000)
+  object space 1086976K, 79% used [0x0000000084600000,0x00000000b968a398,0x00000000c6b80000)
+ Metaspace       used 48537K, capacity 48781K, committed 48896K, reserved 1093632K
+  class space    used 5505K, capacity 5597K, committed 5632K, reserved 1048576K
+}
+Event: 24.153 GC heap before
+{Heap before GC invocations=77 (full 6):
+ PSYoungGen      total 320000K, used 319104K [0x00000000d6d00000, 0x00000000ea700000, 0x0000000100000000)
+  eden space 318976K, 100% used [0x00000000d6d00000,0x00000000ea480000,0x00000000ea480000)
+  from space 1024K, 12% used [0x00000000ea580000,0x00000000ea5a0000,0x00000000ea680000)
+  to   space 1024K, 0% used [0x00000000ea480000,0x00000000ea480000,0x00000000ea580000)
+ ParOldGen       total 1086976K, used 868904K [0x0000000084600000, 0x00000000c6b80000, 0x00000000d6d00000)
+  object space 1086976K, 79% used [0x0000000084600000,0x00000000b968a398,0x00000000c6b80000)
+ Metaspace       used 48537K, capacity 48781K, committed 48896K, reserved 1093632K
+  class space    used 5505K, capacity 5597K, committed 5632K, reserved 1048576K
+Event: 24.157 GC heap after
+Heap after GC invocations=77 (full 6):
+ PSYoungGen      total 320000K, used 96K [0x00000000d6d00000, 0x00000000ebd00000, 0x0000000100000000)
+  eden space 318976K, 0% used [0x00000000d6d00000,0x00000000d6d00000,0x00000000ea480000)
+  from space 1024K, 9% used [0x00000000ea480000,0x00000000ea498000,0x00000000ea580000)
+  to   space 1024K, 0% used [0x00000000ebc00000,0x00000000ebc00000,0x00000000ebd00000)
+ ParOldGen       total 1086976K, used 868904K [0x0000000084600000, 0x00000000c6b80000, 0x00000000d6d00000)
+  object space 1086976K, 79% used [0x0000000084600000,0x00000000b968a398,0x00000000c6b80000)
+ Metaspace       used 48537K, capacity 48781K, committed 48896K, reserved 1093632K
+  class space    used 5505K, capacity 5597K, committed 5632K, reserved 1048576K
+}
+Event: 24.361 GC heap before
+{Heap before GC invocations=78 (full 6):
+ PSYoungGen      total 320000K, used 319072K [0x00000000d6d00000, 0x00000000ebd00000, 0x0000000100000000)
+  eden space 318976K, 100% used [0x00000000d6d00000,0x00000000ea480000,0x00000000ea480000)
+  from space 1024K, 9% used [0x00000000ea480000,0x00000000ea498000,0x00000000ea580000)
+  to   space 1024K, 0% used [0x00000000ebc00000,0x00000000ebc00000,0x00000000ebd00000)
+ ParOldGen       total 1086976K, used 868904K [0x0000000084600000, 0x00000000c6b80000, 0x00000000d6d00000)
+  object space 1086976K, 79% used [0x0000000084600000,0x00000000b968a398,0x00000000c6b80000)
+ Metaspace       used 48537K, capacity 48781K, committed 48896K, reserved 1093632K
+  class space    used 5505K, capacity 5597K, committed 5632K, reserved 1048576K
+Event: 24.365 GC heap after
+Heap after GC invocations=78 (full 6):
+ PSYoungGen      total 342016K, used 128K [0x00000000d6d00000, 0x00000000ebc80000, 0x0000000100000000)
+  eden space 341504K, 0% used [0x00000000d6d00000,0x00000000d6d00000,0x00000000eba80000)
+  from space 512K, 25% used [0x00000000ebc00000,0x00000000ebc20000,0x00000000ebc80000)
+  to   space 1024K, 0% used [0x00000000eba80000,0x00000000eba80000,0x00000000ebb80000)
+ ParOldGen       total 1086976K, used 868904K [0x0000000084600000, 0x00000000c6b80000, 0x00000000d6d00000)
+  object space 1086976K, 79% used [0x0000000084600000,0x00000000b968a398,0x00000000c6b80000)
+ Metaspace       used 48537K, capacity 48781K, committed 48896K, reserved 1093632K
+  class space    used 5505K, capacity 5597K, committed 5632K, reserved 1048576K
+}
+Event: 24.585 GC heap before
+{Heap before GC invocations=79 (full 6):
+ PSYoungGen      total 342016K, used 341632K [0x00000000d6d00000, 0x00000000ebc80000, 0x0000000100000000)
+  eden space 341504K, 100% used [0x00000000d6d00000,0x00000000eba80000,0x00000000eba80000)
+  from space 512K, 25% used [0x00000000ebc00000,0x00000000ebc20000,0x00000000ebc80000)
+  to   space 1024K, 0% used [0x00000000eba80000,0x00000000eba80000,0x00000000ebb80000)
+ ParOldGen       total 1086976K, used 868904K [0x0000000084600000, 0x00000000c6b80000, 0x00000000d6d00000)
+  object space 1086976K, 79% used [0x0000000084600000,0x00000000b968a398,0x00000000c6b80000)
+ Metaspace       used 48537K, capacity 48781K, committed 48896K, reserved 1093632K
+  class space    used 5505K, capacity 5597K, committed 5632K, reserved 1048576K
+Event: 24.589 GC heap after
+Heap after GC invocations=79 (full 6):
+ PSYoungGen      total 342528K, used 128K [0x00000000d6d00000, 0x00000000ed400000, 0x0000000100000000)
+  eden space 341504K, 0% used [0x00000000d6d00000,0x00000000d6d00000,0x00000000eba80000)
+  from space 1024K, 12% used [0x00000000eba80000,0x00000000ebaa0000,0x00000000ebb80000)
+  to   space 1024K, 0% used [0x00000000ed300000,0x00000000ed300000,0x00000000ed400000)
+ ParOldGen       total 1086976K, used 868904K [0x0000000084600000, 0x00000000c6b80000, 0x00000000d6d00000)
+  object space 1086976K, 79% used [0x0000000084600000,0x00000000b968a398,0x00000000c6b80000)
+ Metaspace       used 48537K, capacity 48781K, committed 48896K, reserved 1093632K
+  class space    used 5505K, capacity 5597K, committed 5632K, reserved 1048576K
+}
+
+Deoptimization events (10 events):
+Event: 24.690 Thread 0x000000000459d800 Uncommon trap: reason=unstable_if action=reinterpret pc=0x0000000004c8f824 method=scala.collection.immutable.Vector.initIterator(Lscala/collection/immutable/VectorIterator;)V @ 9
+Event: 24.826 Thread 0x000000000459d800 Uncommon trap: reason=class_check action=maybe_recompile pc=0x00000000049dfeac method=scala.collection.Iterator$$anon$19.next()Lscala/Tuple2; @ 17
+Event: 24.826 Thread 0x000000000459d800 Uncommon trap: reason=class_check action=maybe_recompile pc=0x00000000049dfeac method=scala.collection.Iterator$$anon$19.next()Lscala/Tuple2; @ 17
+Event: 24.826 Thread 0x000000000459d800 Uncommon trap: reason=class_check action=maybe_recompile pc=0x00000000049dfeac method=scala.collection.Iterator$$anon$19.next()Lscala/Tuple2; @ 17
+Event: 24.826 Thread 0x000000000459d800 Uncommon trap: reason=class_check action=maybe_recompile pc=0x00000000049dfeac method=scala.collection.Iterator$$anon$19.next()Lscala/Tuple2; @ 17
+Event: 24.838 Thread 0x000000000459d800 Uncommon trap: reason=class_check action=maybe_recompile pc=0x000000000510f964 method=breeze.linalg.NumericOps$class.$colon$eq(Lbreeze/linalg/NumericOps;Ljava/lang/Object;Lbreeze/generic/UFunc$InPlaceImpl2;)Ljava/lang/Object; @ 8
+Event: 24.838 Thread 0x000000000459d800 Uncommon trap: reason=class_check action=maybe_recompile pc=0x000000000510f964 method=breeze.linalg.NumericOps$class.$colon$eq(Lbreeze/linalg/NumericOps;Ljava/lang/Object;Lbreeze/generic/UFunc$InPlaceImpl2;)Ljava/lang/Object; @ 8
+Event: 24.860 Thread 0x000000000459d800 Uncommon trap: reason=class_check action=maybe_recompile pc=0x00000000050fdc94 method=scala.collection.immutable.Range.foreach(Lscala/Function1;)V @ 89
+Event: 24.861 Thread 0x000000000459d800 Uncommon trap: reason=class_check action=maybe_recompile pc=0x00000000050fdc94 method=scala.collection.immutable.Range.foreach(Lscala/Function1;)V @ 89
+Event: 24.864 Thread 0x000000000459d800 Uncommon trap: reason=class_check action=maybe_recompile pc=0x0000000004a70a78 method=scala.collection.immutable.Range.foreach(Lscala/Function1;)V @ 89
+
+Internal exceptions (10 events):
+Event: 11.162 Thread 0x000000000459d800 Exception <a 'java/lang/ClassNotFoundException': java/rmi/package> (0x00000000d7bc9490) thrown at [C:\re\workspace\8-2-build-windows-amd64-cygwin\jdk8u121\8372\hotspot\src\share\vm\classfile\systemDictionary.cpp, line 210]
+Event: 11.180 Thread 0x000000000459d800 Exception <a 'java/lang/ClassNotFoundException': scala/reflect/ScalaSignature> (0x00000000d7c6bfe8) thrown at [C:\re\workspace\8-2-build-windows-amd64-cygwin\jdk8u121\8372\hotspot\src\share\vm\classfile\systemDictionary.cpp, line 210]
+Event: 11.180 Thread 0x000000000459d800 Exception <a 'java/lang/ClassNotFoundException': scala/reflect/ScalaLongSignature> (0x00000000d7c6c490) thrown at [C:\re\workspace\8-2-build-windows-amd64-cygwin\jdk8u121\8372\hotspot\src\share\vm\classfile\systemDictionary.cpp, line 210]
+Event: 11.188 Thread 0x000000000459d800 Exception <a 'java/lang/ClassNotFoundException': java/lang/ref> (0x00000000d7cd2a78) thrown at [C:\re\workspace\8-2-build-windows-amd64-cygwin\jdk8u121\8372\hotspot\src\share\vm\classfile\systemDictionary.cpp, line 210]
+Event: 11.188 Thread 0x000000000459d800 Exception <a 'java/lang/ClassNotFoundException': java/lang/ref/package> (0x00000000d7cd4278) thrown at [C:\re\workspace\8-2-build-windows-amd64-cygwin\jdk8u121\8372\hotspot\src\share\vm\classfile\systemDictionary.cpp, line 210]
+Event: 11.331 Thread 0x000000000459d800 Exception <a 'java/lang/ClassNotFoundException': java/lang/invoke> (0x00000000d8611008) thrown at [C:\re\workspace\8-2-build-windows-amd64-cygwin\jdk8u121\8372\hotspot\src\share\vm\classfile\systemDictionary.cpp, line 210]
+Event: 11.331 Thread 0x000000000459d800 Exception <a 'java/lang/ClassNotFoundException': java/lang/invoke/package> (0x00000000d8611fb8) thrown at [C:\re\workspace\8-2-build-windows-amd64-cygwin\jdk8u121\8372\hotspot\src\share\vm\classfile\systemDictionary.cpp, line 210]
+Event: 11.409 Thread 0x000000000459d800 Exception <a 'java/lang/ClassNotFoundException': java/lang/annotation> (0x00000000d8b3e6b8) thrown at [C:\re\workspace\8-2-build-windows-amd64-cygwin\jdk8u121\8372\hotspot\src\share\vm\classfile\systemDictionary.cpp, line 210]
+Event: 11.409 Thread 0x000000000459d800 Exception <a 'java/lang/ClassNotFoundException': java/lang/annotation/package> (0x00000000d8b3f688) thrown at [C:\re\workspace\8-2-build-windows-amd64-cygwin\jdk8u121\8372\hotspot\src\share\vm\classfile\systemDictionary.cpp, line 210]
+Event: 11.726 Thread 0x000000000459d800 Implicit null exception at 0x0000000004972962 to 0x0000000004972b29
+
+Events (10 events):
+Event: 24.860 loading class scalismo/statisticalmodel/DiscreteLowRankGaussianProcess$$anonfun$scalismo$statisticalmodel$DiscreteLowRankGaussianProcess$$genericRegressionComputations$2$$anonfun$apply$12$$anonfun$15
+Event: 24.860 loading class scalismo/statisticalmodel/DiscreteLowRankGaussianProcess$$anonfun$scalismo$statisticalmodel$DiscreteLowRankGaussianProcess$$genericRegressionComputations$2$$anonfun$apply$12$$anonfun$15 done
+Event: 24.861 Thread 0x000000000459d800 Uncommon trap: trap_request=0xffffffde fr.pc=0x00000000050fdc94
+Event: 24.861 Thread 0x000000000459d800 DEOPT PACKING pc=0x00000000050fdc94 sp=0x00000000042febc0
+Event: 24.861 Thread 0x000000000459d800 DEOPT UNPACKING pc=0x00000000047e582a sp=0x00000000042feb58 mode 2
+Event: 24.864 Thread 0x000000000459d800 Uncommon trap: trap_request=0xffffffde fr.pc=0x0000000004a70a78
+Event: 24.864 Thread 0x000000000459d800 DEOPT PACKING pc=0x0000000004a70a78 sp=0x00000000042feb90
+Event: 24.864 Thread 0x000000000459d800 DEOPT UNPACKING pc=0x00000000047e582a sp=0x00000000042feb58 mode 2
+Event: 24.894 Thread 0x000000000459d800 DEOPT PACKING pc=0x0000000004ac45f5 sp=0x00000000042fe810
+Event: 24.894 Thread 0x000000000459d800 DEOPT UNPACKING pc=0x00000000047e787f sp=0x00000000042fe548 mode 0
+
+
+Dynamic libraries:
+0x00007ff7d1910000 - 0x00007ff7d1947000 	C:\Program Files\Java\jdk1.8.0_121\bin\java.exe
+0x00007ffca1b40000 - 0x00007ffca1d20000 	C:\WINDOWS\SYSTEM32\ntdll.dll
+0x00007ffca1440000 - 0x00007ffca14ee000 	C:\WINDOWS\System32\KERNEL32.DLL
+0x00007ffc9eb50000 - 0x00007ffc9edb6000 	C:\WINDOWS\System32\KERNELBASE.dll
+0x00007ffc9f6b0000 - 0x00007ffc9f751000 	C:\WINDOWS\System32\ADVAPI32.dll
+0x00007ffca1960000 - 0x00007ffca19fd000 	C:\WINDOWS\System32\msvcrt.dll
+0x00007ffc9f650000 - 0x00007ffc9f6ab000 	C:\WINDOWS\System32\sechost.dll
+0x00007ffc9f760000 - 0x00007ffc9f87f000 	C:\WINDOWS\System32\RPCRT4.dll
+0x00007ffca14f0000 - 0x00007ffca167f000 	C:\WINDOWS\System32\USER32.dll
+0x00007ffc9dfa0000 - 0x00007ffc9dfc0000 	C:\WINDOWS\System32\win32u.dll
+0x00007ffc9f060000 - 0x00007ffc9f088000 	C:\WINDOWS\System32\GDI32.dll
+0x00007ffc9e710000 - 0x00007ffc9e8a3000 	C:\WINDOWS\System32\gdi32full.dll
+0x00007ffc9edc0000 - 0x00007ffc9ee5b000 	C:\WINDOWS\System32\msvcp_win.dll
+0x00007ffc9ef10000 - 0x00007ffc9f006000 	C:\WINDOWS\System32\ucrtbase.dll
+0x00007ffc90240000 - 0x00007ffc904a9000 	C:\WINDOWS\WinSxS\amd64_microsoft.windows.common-controls_6595b64144ccf1df_6.0.16299.431_none_15c7d3ee93659e73\COMCTL32.dll
+0x00007ffc9f880000 - 0x00007ffc9fb88000 	C:\WINDOWS\System32\combase.dll
+0x00007ffc9ea80000 - 0x00007ffc9eaf2000 	C:\WINDOWS\System32\bcryptPrimitives.dll
+0x00007ffc9f030000 - 0x00007ffc9f05d000 	C:\WINDOWS\System32\IMM32.DLL
+0x0000000074fb0000 - 0x0000000075082000 	C:\Program Files\Java\jdk1.8.0_121\jre\bin\msvcr100.dll
+0x0000000074710000 - 0x0000000074fab000 	C:\Program Files\Java\jdk1.8.0_121\jre\bin\server\jvm.dll
+0x00007ffca1b00000 - 0x00007ffca1b08000 	C:\WINDOWS\System32\PSAPI.DLL
+0x00007ffc8b870000 - 0x00007ffc8b879000 	C:\WINDOWS\SYSTEM32\WSOCK32.dll
+0x00007ffca12c0000 - 0x00007ffca132c000 	C:\WINDOWS\System32\WS2_32.dll
+0x00007ffc98f60000 - 0x00007ffc98f83000 	C:\WINDOWS\SYSTEM32\WINMM.dll
+0x00007ffc9b920000 - 0x00007ffc9b92a000 	C:\WINDOWS\SYSTEM32\VERSION.dll
+0x00007ffc98e90000 - 0x00007ffc98eba000 	C:\WINDOWS\SYSTEM32\winmmbase.dll
+0x00007ffc9eb00000 - 0x00007ffc9eb4a000 	C:\WINDOWS\System32\cfgmgr32.dll
+0x0000000074700000 - 0x000000007470f000 	C:\Program Files\Java\jdk1.8.0_121\jre\bin\verify.dll
+0x00000000746d0000 - 0x00000000746f9000 	C:\Program Files\Java\jdk1.8.0_121\jre\bin\java.dll
+0x00000000764c0000 - 0x00000000764e3000 	C:\Program Files\Java\jdk1.8.0_121\jre\bin\instrument.dll
+0x00000000746b0000 - 0x00000000746c6000 	C:\Program Files\Java\jdk1.8.0_121\jre\bin\zip.dll
+0x00007ffc9fb90000 - 0x00007ffca0fc8000 	C:\WINDOWS\System32\SHELL32.dll
+0x00007ffca1680000 - 0x00007ffca1726000 	C:\WINDOWS\System32\shcore.dll
+0x00007ffc9dfc0000 - 0x00007ffc9e707000 	C:\WINDOWS\System32\windows.storage.dll
+0x00007ffca1170000 - 0x00007ffca11c1000 	C:\WINDOWS\System32\shlwapi.dll
+0x00007ffc9df00000 - 0x00007ffc9df11000 	C:\WINDOWS\System32\kernel.appcore.dll
+0x00007ffc9deb0000 - 0x00007ffc9defc000 	C:\WINDOWS\System32\powrprof.dll
+0x00007ffc9de90000 - 0x00007ffc9deab000 	C:\WINDOWS\System32\profapi.dll
+0x00007ffc8aa60000 - 0x00007ffc8aa7a000 	C:\Program Files\JetBrains\IntelliJ IDEA Community Edition 2018.1.3\bin\breakgen64.dll
+0x0000000074690000 - 0x00000000746aa000 	C:\Program Files\Java\jdk1.8.0_121\jre\bin\net.dll
+0x00007ffc9d3d0000 - 0x00007ffc9d436000 	C:\WINDOWS\system32\mswsock.dll
+0x00007ffc9dbc0000 - 0x00007ffc9dbd7000 	C:\WINDOWS\SYSTEM32\CRYPTSP.dll
+0x00007ffc9cfd0000 - 0x00007ffc9d003000 	C:\WINDOWS\system32\rsaenh.dll
+0x00007ffc9d950000 - 0x00007ffc9d975000 	C:\WINDOWS\SYSTEM32\bcrypt.dll
+0x00007ffc9dd90000 - 0x00007ffc9ddb9000 	C:\WINDOWS\SYSTEM32\USERENV.dll
+0x00007ffc9d590000 - 0x00007ffc9d59b000 	C:\WINDOWS\SYSTEM32\CRYPTBASE.dll
+0x00007ffc9d160000 - 0x00007ffc9d199000 	C:\WINDOWS\SYSTEM32\IPHLPAPI.DLL
+0x00007ffca1730000 - 0x00007ffca1738000 	C:\WINDOWS\System32\NSI.dll
+0x00007ffc91cc0000 - 0x00007ffc91cd6000 	C:\WINDOWS\SYSTEM32\dhcpcsvc6.DLL
+0x00007ffc91ca0000 - 0x00007ffc91cba000 	C:\WINDOWS\SYSTEM32\dhcpcsvc.DLL
+0x0000000074670000 - 0x0000000074681000 	C:\Program Files\Java\jdk1.8.0_121\jre\bin\nio.dll
+0x0000000076320000 - 0x00000000764b8000 	C:\Program Files\Java\jdk1.8.0_121\jre\bin\awt.dll
+0x00007ffca1890000 - 0x00007ffca1955000 	C:\WINDOWS\System32\OLEAUT32.dll
+0x00007ffc9b6d0000 - 0x00007ffc9b758000 	C:\WINDOWS\SYSTEM32\apphelp.dll
+0x00007ffc9b800000 - 0x00007ffc9b895000 	C:\WINDOWS\system32\uxtheme.dll
+0x00007ffc9f090000 - 0x00007ffc9f1f7000 	C:\WINDOWS\System32\MSCTF.dll
+0x00007ffc9bb10000 - 0x00007ffc9bb3a000 	C:\WINDOWS\system32\dwmapi.dll
+0x00007ffca1740000 - 0x00007ffca1889000 	C:\WINDOWS\System32\ole32.dll
+0x0000000076310000 - 0x0000000076317000 	C:\Program Files\Java\jdk1.8.0_121\jre\bin\jawt.dll
+0x00000000637c0000 - 0x00000000637cd000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\jogl-1324595784494020526.tmp\gluegen-rt.dll
+0x000000006a440000 - 0x000000006a44d000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\jogl-1324595784494020526.tmp\nativewindow_awt.dll
+0x000000006c100000 - 0x000000006c10f000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\jogl-1324595784494020526.tmp\nativewindow_win32.dll
+0x0000000064500000 - 0x00000000645a2000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\jogl-1324595784494020526.tmp\jogl_desktop.dll
+0x0000000064340000 - 0x000000006438e000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\jogl-1324595784494020526.tmp\jogl_mobile.dll
+0x000000006cbc0000 - 0x000000006cbd2000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\jogl-1324595784494020526.tmp\newt.dll
+0x00007ffc764e0000 - 0x00007ffc765fe000 	C:\WINDOWS\system32\opengl32.dll
+0x00007ffc75b50000 - 0x00007ffc75b7c000 	C:\WINDOWS\SYSTEM32\GLU32.dll
+0x00007ffc9a380000 - 0x00007ffc9a38a000 	C:\ai_toolkit\anaconda\Library\bin\libEGL.dll
+0x00007ffc619d0000 - 0x00007ffc61c40000 	C:\Program Files\MiKTeX 2.9\miktex\bin\x64\libGLESv2.dll
+0x00007ffc74640000 - 0x00007ffc74656000 	C:\WINDOWS\SYSTEM32\VCRUNTIME140.dll
+0x00007ffc95760000 - 0x00007ffc958f5000 	C:\WINDOWS\SYSTEM32\d3d9.dll
+0x00007ffc73c90000 - 0x00007ffc73d2c000 	C:\WINDOWS\SYSTEM32\MSVCP140.dll
+0x00007ffc5d970000 - 0x00007ffc5e4b8000 	C:\WINDOWS\SYSTEM32\ig75icd64.dll
+0x00007ffc94c70000 - 0x00007ffc956b0000 	C:\WINDOWS\SYSTEM32\igdusc64.dll
+0x00007ffc98990000 - 0x00007ffc989a3000 	C:\WINDOWS\SYSTEM32\WTSAPI32.dll
+0x0000000076230000 - 0x0000000076301000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\msvcr100.dll
+0x0000000076190000 - 0x0000000076228000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\msvcp100.dll
+0x00007ffc8a7c0000 - 0x00007ffc8a7fd000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtksys-6.1.dll
+0x00007ffc853d0000 - 0x00007ffc853e3000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkzlib-6.1.dll
+0x00007ffc844f0000 - 0x00007ffc8450e000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkjpeg-6.1.dll
+0x00007ffc83960000 - 0x00007ffc8397e000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkpng-6.1.dll
+0x00007ffc80c60000 - 0x00007ffc80cab000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtktiff-6.1.dll
+0x00007ffc670e0000 - 0x00007ffc672b9000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkhdf5-6.1.dll
+0x00007ffc83930000 - 0x00007ffc8395c000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkhdf5_hl-6.1.dll
+0x00007ffc838a0000 - 0x00007ffc838be000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkalglib-6.1.dll
+0x00007ffc80c30000 - 0x00007ffc80c59000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkoggtheora-6.1.dll
+0x00007ffc80c10000 - 0x00007ffc80c2e000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkjsoncpp-6.1.dll
+0x00007ffc6d170000 - 0x00007ffc6d262000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtklibxml2-6.1.dll
+0x00007ffc7dbc0000 - 0x00007ffc7dbf2000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkproj4-6.1.dll
+0x00007ffc80be0000 - 0x00007ffc80c0c000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkverdict-6.1.dll
+0x00007ffc80460000 - 0x00007ffc8047c000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkexpat-6.1.dll
+0x00007ffc7db50000 - 0x00007ffc7dbb1000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkfreetype-6.1.dll
+0x00007ffc9a160000 - 0x00007ffc9a16e000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkftgl-6.1.dll
+0x00007ffc7f5f0000 - 0x00007ffc7f606000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkgl2ps-6.1.dll
+0x00007ffc662f0000 - 0x00007ffc664e1000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkCommonCore-6.1.dll
+0x00007ffc8d310000 - 0x00007ffc8d319000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkWrappingJava-6.1.dll
+0x00007ffc71260000 - 0x00007ffc7129e000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkCommonCoreJava.dll
+0x00007ffc7ee10000 - 0x00007ffc7ee2d000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkCommonMath-6.1.dll
+0x00007ffc8d2c0000 - 0x00007ffc8d2cf000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkCommonMathJava.dll
+0x00007ffc7ed30000 - 0x00007ffc7ed45000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkCommonMisc-6.1.dll
+0x00007ffc8b2a0000 - 0x00007ffc8b2a9000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkCommonMiscJava.dll
+0x00007ffc75850000 - 0x00007ffc75867000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkCommonSystem-6.1.dll
+0x00007ffc8aa20000 - 0x00007ffc8aa2a000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkCommonSystemJava.dll
+0x00007ffc71230000 - 0x00007ffc71258000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkCommonTransforms-6.1.dll
+0x00007ffc71210000 - 0x00007ffc71222000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkCommonTransformsJava.dll
+0x00007ffc630a0000 - 0x00007ffc632a9000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkCommonDataModel-6.1.dll
+0x00007ffc6e830000 - 0x00007ffc6e8b3000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkCommonDataModelJava.dll
+0x00007ffc6e810000 - 0x00007ffc6e82b000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkCommonColor-6.1.dll
+0x00007ffc8a7b0000 - 0x00007ffc8a7b9000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkCommonColorJava.dll
+0x00007ffc6e7f0000 - 0x00007ffc6e80c000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkCommonComputationalGeometry-6.1.dll
+0x00007ffc85430000 - 0x00007ffc8543d000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkCommonComputationalGeometryJava.dll
+0x00007ffc6e1a0000 - 0x00007ffc6e213000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkCommonExecutionModel-6.1.dll
+0x00007ffc6e170000 - 0x00007ffc6e192000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkCommonExecutionModelJava.dll
+0x00007ffc6e150000 - 0x00007ffc6e16d000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkDICOMParser-6.1.dll
+0x00007ffc6d720000 - 0x00007ffc6d796000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkmetaio-6.1.dll
+0x00007ffc6da20000 - 0x00007ffc6da6f000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkIOCore-6.1.dll
+0x00007ffc83920000 - 0x00007ffc8392d000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkIOCoreJava.dll
+0x00007ffc6c5a0000 - 0x00007ffc6c604000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkIOLegacy-6.1.dll
+0x00007ffc6dab0000 - 0x00007ffc6dac1000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkIOLegacyJava.dll
+0x00007ffc66f70000 - 0x00007ffc67007000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkIOImage-6.1.dll
+0x00007ffc6da00000 - 0x00007ffc6da17000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkIOImageJava.dll
+0x00007ffc6d2d0000 - 0x00007ffc6d30e000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkParallelCore-6.1.dll
+0x00007ffc809a0000 - 0x00007ffc809ae000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkParallelCoreJava.dll
+0x00007ffc652c0000 - 0x00007ffc653c7000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkImagingCore-6.1.dll
+0x00007ffc6d4d0000 - 0x00007ffc6d4ed000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkImagingCoreJava.dll
+0x00007ffc6d0f0000 - 0x00007ffc6d10c000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkImagingFourier-6.1.dll
+0x00007ffc7fed0000 - 0x00007ffc7feda000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkImagingFourierJava.dll
+0x00007ffc6d0c0000 - 0x00007ffc6d0e8000 	C:\Users\Lukas\AppData\Local\Temp\scalismo_native-6846066424835570141.tmp\vtk6-1384332352731369560.tmp\vtkImagingSources-6.1.dll
+
+VM Arguments:
+jvm_args: -javaagent:C:\Program Files\JetBrains\IntelliJ IDEA Community Edition 2018.1.3\lib\idea_rt.jar=50471:C:\Program Files\JetBrains\IntelliJ IDEA Community Edition 2018.1.3\bin -Dfile.encoding=UTF-8 
+java_command: shape_modelling.Segmentation
+java_class_path (initial): C:\Program Files\Java\jdk1.8.0_121\jre\lib\charsets.jar;C:\Program Files\Java\jdk1.8.0_121\jre\lib\deploy.jar;C:\Program Files\Java\jdk1.8.0_121\jre\lib\ext\access-bridge-64.jar;C:\Program Files\Java\jdk1.8.0_121\jre\lib\ext\cldrdata.jar;C:\Program Files\Java\jdk1.8.0_121\jre\lib\ext\dnsns.jar;C:\Program Files\Java\jdk1.8.0_121\jre\lib\ext\jaccess.jar;C:\Program Files\Java\jdk1.8.0_121\jre\lib\ext\jfxrt.jar;C:\Program Files\Java\jdk1.8.0_121\jre\lib\ext\localedata.jar;C:\Program Files\Java\jdk1.8.0_121\jre\lib\ext\nashorn.jar;C:\Program Files\Java\jdk1.8.0_121\jre\lib\ext\sunec.jar;C:\Program Files\Java\jdk1.8.0_121\jre\lib\ext\sunjce_provider.jar;C:\Program Files\Java\jdk1.8.0_121\jre\lib\ext\sunmscapi.jar;C:\Program Files\Java\jdk1.8.0_121\jre\lib\ext\sunpkcs11.jar;C:\Program Files\Java\jdk1.8.0_121\jre\lib\ext\zipfs.jar;C:\Program Files\Java\jdk1.8.0_121\jre\lib\javaws.jar;C:\Program Files\Java\jdk1.8.0_121\jre\lib\jce.jar;C:\Program Files\Java\jdk1.8.0_121\jre\lib\jfr.jar;C:\Program Files\Java\jdk1.8.0_121\jre\lib\jfxswt.jar;C:\Program Files\Java\jdk1.8.0_121\jre\lib\jsse.jar;C:\Program Files\Java\jdk1.8.0_121\jre\lib\management-agent.jar;C:\Program Files\Java\jdk1.8.0_121\jre\lib\plugin.jar;C:\Program Files\Java\jdk1.8.0_121\jre\lib\resources.jar;C:\Program Files\Java\jdk1.8.0_121\jre\lib\rt.jar;C:\Users\Lukas\Google Drive\Basel\Shape Modelling\ex3\minimal-scalismo-seed\target\scala-2.11\classes;C:\Users\Lukas\.ivy2\cache\ch.unibas.cs.gravis\scalismo-native-all\jars\scalismo-native-all-3.0.0.jar;C:\Users\Lukas\.ivy2\cache\ch.unibas.cs.gravis\scalismo-native-stub\jars\scalismo-native-stub-3.0.0.jar;C:\Users\Lukas\.ivy2\cache\ch.unibas.cs.gravis\scalismo-sampling_2.11\jars\scalismo-sampling_2.11-develop-SNAPSHOT.jar;C:\Users\Lukas\.ivy2\cache\ch.unibas.cs.gravis\scalismo-ui_2.11\jars\scalismo-ui_2.11-0.6.2.jar;C:\Users\Lukas\.ivy2\cache\ch.unibas.cs.gravis\scalismo_2.11\jars\scalismo_2.11-0.10.0.jar;C:\Users\Lukas\.ivy2\cache\com.gith
+Launcher Type: SUN_STANDARD
+
+Environment Variables:
+JAVA_HOME=C:\Program Files\Java\jre1.8.0_171
+USERNAME=Lukas
+OS=Windows_NT
+PROCESSOR_IDENTIFIER=Intel64 Family 6 Model 60 Stepping 3, GenuineIntel
+
+
+
+---------------  S Y S T E M  ---------------
+
+OS: Windows 10.0 , 64 bit Build 16299 (10.0.16299.431)
+
+CPU:total 4 (2 cores per cpu, 2 threads per core) family 6 model 60 stepping 3, cmov, cx8, fxsr, mmx, sse, sse2, sse3, ssse3, sse4.1, sse4.2, popcnt, avx, avx2, aes, clmul, erms, lzcnt, ht, tsc, tscinvbit, bmi1, bmi2
+
+Memory: 4k page, physical 8096224k(1621108k free), swap 16192448k(7979064k free)
+
+vm_info: Java HotSpot(TM) 64-Bit Server VM (25.121-b13) for windows-amd64 JRE (1.8.0_121-b13), built on Dec 12 2016 18:21:36 by "java_re" with MS VC++ 10.0 (VS2010)
+
+time: Tue May 15 17:07:57 2018
+elapsed time: 25 seconds (0d 0h 0m 25s)
+
