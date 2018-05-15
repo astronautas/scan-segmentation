@@ -48,7 +48,7 @@ object Segmentation {
     //runPoseFitting(asm, image)
     var coeffs = ShapeParameters(DenseVector.zeros[Float](3), DenseVector.zeros[Float](3), asm.statisticalModel.coefficients(asm.statisticalModel.mean))
 
-    0 until coeffs.modelCoefficients.length / 6 foreach(i => {
+    0 until coeffs.modelCoefficients.length / 5 foreach(i => {
       coeffs = runShapeFittingForComponents(asm, prepImg, coeffs, i)
     })
 
@@ -93,7 +93,7 @@ object Segmentation {
 
     }
 
-    samplingIterator.take(40).toIndexedSeq
+    samplingIterator.take(20).toIndexedSeq
   }
 
   def runShapeFittingForComponents(asm: ActiveShapeModel, prepImg : PreprocessedImage, initialParameters : ShapeParameters, tillComponentIndex: Int): ShapeParameters = {
@@ -122,7 +122,7 @@ object Segmentation {
     val posteriorEvaluator = ProductEvaluator(MCMC.ShapePriorEvaluator(asm.statisticalModel), IntensityBasedLikeliHoodEvaluator(asm, prepImg))
 
     // Deviations should match deviations of model
-    val poseGenerator =  MixtureProposal.fromProposalsWithTransition((0.8, ShapeUpdateProposalFirstComponents(asm.statisticalModel.rank, 0.5f, tillComponentIndex)), (0.2, ShapeUpdateProposalFirstComponents(asm.statisticalModel.rank, 1f, tillComponentIndex)))(rnd=new Random())
+    val poseGenerator =  MixtureProposal.fromProposalsWithTransition((0.8, ShapeUpdateProposalFirstComponents(asm.statisticalModel.rank, 1f, tillComponentIndex)), (0.2, ShapeUpdateProposalFirstComponents(asm.statisticalModel.rank, 2f, tillComponentIndex)))(rnd=new Random())
 
     val chain = MetropolisHastings(poseGenerator, posteriorEvaluator, logger)(new Random())
 
@@ -166,7 +166,7 @@ object Segmentation {
     val posteriorEvaluator = ProductEvaluator(MCMC.ShapePriorEvaluator(asm.statisticalModel), IntensityBasedLikeliHoodEvaluator(asm, prepImg))
 
     // Deviations should match deviations of model
-    val poseGenerator =  MixtureProposal.fromProposalsWithTransition((0.7, ShapeUpdateProposal(asm.statisticalModel.rank, 0.00001f)), (0.3, ShapeUpdateProposal(asm.statisticalModel.rank, 0.05f)))(rnd=new Random())
+    val poseGenerator =  MixtureProposal.fromProposalsWithTransition((0.7, ShapeUpdateProposal(asm.statisticalModel.rank, 0.1f)), (0.3, ShapeUpdateProposal(asm.statisticalModel.rank, 0.05f)))(rnd=new Random())
 
     val chain = MetropolisHastings(poseGenerator, posteriorEvaluator, logger)(new Random())
 
