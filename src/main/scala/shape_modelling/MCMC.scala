@@ -50,6 +50,7 @@ object MCMC {
 
     override def propose(theta: ShapeParameters): ShapeParameters = {
       val perturbation = perturbationDistr.sample()
+
       val thetaPrime = ShapeParameters(theta.rotationParameters, theta.translationParameters, theta.modelCoefficients + perturbationDistr.sample)
       thetaPrime
     }

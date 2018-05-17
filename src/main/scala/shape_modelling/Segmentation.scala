@@ -2,7 +2,8 @@ package shape_modelling
 
 import java.io.File
 
-import breeze.linalg.DenseVector
+import breeze.linalg.{DenseMatrix, DenseVector, reshape}
+import breeze.numerics.{exp, log, sqrt}
 import scalismo.geometry._3D
 import scalismo.image.DiscreteScalarImage
 import scalismo.io.{ActiveShapeModelIO, ImageIO}
@@ -185,5 +186,50 @@ object Segmentation {
     samplingIterator.take(2000).toIndexedSeq
 
     bestSample
+  }
+
+  // Adaptive covariance
+  var learn_scale = 0.5
+  var sampleDiscard = 200
+  var adaptScale = false
+  var sampleLag = 20
+  var meanEst = DenseVector.ones(25)
+  var covEst = 0.05f * DenseMatrix.eye[Float](25)
+  var globalScale = Math.pow(2.38, 2) / 25
+  var accStar = 0.234
+  def adapt(iteration : Int, stepOutput : ShapeParameters, logAcceptance : Double) : Unit = {
+
+    if (iteration > sampleDiscard) {
+      learn_scale = 1.0 / sqrt(iteration - sampleDiscard + 1.0)
+
+      if (adaptScale) {
+        scaleAdapt(learn_scale, stepOutput, logAcceptance)
+      }
+
+      if (iteration % sampleLag == 0) {
+        meanAndCovAdapt(learn_scale, stepOutput)
+      }
+    }
+  }
+
+  def scaleAdapt(learn_scale : Double, step_output : ShapeParameters, logAcceptance : Double) : Unit = {
+    // implement this
+    //        self.globalscale = exp(log(self.globalscale) + learn_scale * (exp(step_output.log_ratio) - self.accstar))
+    globalScale = exp(log(globalScale) + learn_scale + (exp(logAcceptance) - accStar))
+  }
+
+  //        current_1d=reshape(self.current_sample_object.samples, (self.distribution.dimension,))
+  //        difference=current_1d - self.mean_est
+  //        self.cov_est += learn_scale * (outer(difference, difference) - self.cov_est)
+  //        self.mean_est += learn_scale * (current_1d - self.mean_est)
+  //        #print "mean estimate: ", self.mean_est
+  def meanAndCovAdapt(learnScale : Double, stepOutput : ShapeParameters) : Unit = {
+    // implement this
+    var current = stepOutput.modelCoefficients
+
+    var diff = DenseVector(current - meanEst)
+
+    meanEst += learnScale * diff
+    covEst += learnScale * (DenseMatrix(diff.t * diff) - covEst)
   }
 }

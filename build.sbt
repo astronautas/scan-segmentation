@@ -22,6 +22,10 @@ libraryDependencies  ++= {
 	)
 }
 
+libraryDependencies += "org.scalanlp" % "breeze_2.11" % "0.12"
+resolvers += "Sonatype Releases" at "https://oss.sonatype.org/content/repositories/releases/"
+scalaVersion := "2.11.6"
+
 assemblyJarName in assembly := "exectuable.jar"
 
 mainClass in assembly := Some("com.example.ExampleApp")
