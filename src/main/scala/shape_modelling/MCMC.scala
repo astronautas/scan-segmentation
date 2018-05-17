@@ -1,6 +1,7 @@
 package shape_modelling
 
 import breeze.linalg.{DenseMatrix, DenseVector}
+import breeze.numerics.{exp, log, sqrt}
 import scalismo.geometry.{Point, SquareMatrix, Vector3D, _3D}
 import scalismo.sampling.{DistributionEvaluator, ProposalGenerator, SymmetricTransition, TransitionProbability}
 import scalismo.statisticalmodel.asm.{ActiveShapeModel, PreprocessedImage}
@@ -61,16 +62,79 @@ object MCMC {
     }
   }
 
-  case class ShapeUpdateProposalFirstComponents(paramVectorSize: Int, stdev: Float, componentIndex : Int) extends
+  // ADAPTIVE SHAPE UPDATE PROPOSAL
+  case class ShapeUpdateProposalAdapting(paramVectorSize: Int, stdev: Float, adaptScale: Boolean = false, sampleDiscard: Int,
+                                         sampleLag: Int, accStar: Double) extends
+    ProposalGenerator[ShapeParameters] with TransitionProbability[ShapeParameters] with SymmetricTransition[ShapeParameters] with AdaptiveGenerator[ShapeParameters] {
+
+    var perturbationDistr = new MultivariateNormalDistribution(DenseVector.zeros(paramVectorSize),
+      DenseMatrix.eye[Float](paramVectorSize) * stdev)
+
+    var globalScale: Double = Math.pow(2.38, 2) / paramVectorSize
+    var covEst: DenseMatrix[Float] = DenseMatrix.eye[Float](paramVectorSize) * stdev
+    var meanEst: DenseVector[Float] = DenseVector.ones(paramVectorSize)
+    var learnScale: Float = 0f
+
+    override def propose(theta: ShapeParameters): ShapeParameters = {
+      perturbationDistr = new MultivariateNormalDistribution(theta.modelCoefficients, cov = globalScale.toFloat * covEst)
+
+      val perturbation = perturbationDistr.sample()
+
+      val thetaPrime = ShapeParameters(theta.rotationParameters, theta.translationParameters, perturbationDistr.sample)
+      thetaPrime
+    }
+
+    override def logTransitionProbability(from: ShapeParameters, to: ShapeParameters): Double = {
+      val residual = to.modelCoefficients - from.modelCoefficients
+      perturbationDistr.logpdf(residual)
+    }
+
+    // ADAPTING
+    def adapt(iteration: Int, stepOutput: ShapeParameters, logAcceptance: Double): Unit = {
+
+      if (iteration > sampleDiscard) {
+        learnScale = (1.0 / sqrt(iteration - sampleDiscard + 1.0)).toFloat
+
+        if (adaptScale) {
+          scaleAdapt(learnScale, stepOutput, logAcceptance)
+        }
+
+        if (iteration % sampleLag == 0) {
+          meanAndCovAdapt(learnScale, stepOutput)
+        }
+      }
+    }
+
+    def meanAndCovAdapt(learnScale: Float, stepOutput: ShapeParameters): Unit = {
+      var diff: DenseVector[Float] = DenseVector.ones(paramVectorSize)
+
+      // implement this
+      var current = stepOutput.modelCoefficients
+
+      diff = current - meanEst
+
+      meanEst += learnScale * diff
+      covEst += learnScale * (diff.t * diff - covEst)
+    }
+
+    def scaleAdapt(learn_scale: Double, step_output: ShapeParameters, logAcceptance: Double): Unit = {
+      // implement this
+      //        self.globalscale = exp(log(self.globalscale) + learn_scale * (exp(step_output.log_ratio) - self.accstar))
+      globalScale = exp(log(globalScale) + learn_scale + (exp(logAcceptance) - accStar))
+    }
+  }
+
+  case class ShapeUpdateProposalFirstComponents(paramVectorSize: Int, stdev: Float, componentIndex: Int) extends
     ProposalGenerator[ShapeParameters] with TransitionProbability[ShapeParameters] with SymmetricTransition[ShapeParameters] {
 
     val perturbationDistr = new MultivariateNormalDistribution(DenseVector.zeros(paramVectorSize),
       DenseMatrix.eye[Float](paramVectorSize) * stdev)
 
     override def propose(theta: ShapeParameters): ShapeParameters = {
+      // Generate distribution
       val perturbation = perturbationDistr.sample()
 
-      0 until perturbation.length foreach(index => if (componentIndex != index) perturbation(index) = 0)
+      0 until perturbation.length foreach (index => if (componentIndex != index) perturbation(index) = 0)
 
       val thetaPrime = ShapeParameters(theta.rotationParameters, theta.translationParameters, theta.modelCoefficients + perturbationDistr.sample)
       thetaPrime

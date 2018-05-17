@@ -2,8 +2,7 @@ package shape_modelling
 
 import java.io.File
 
-import breeze.linalg.{DenseMatrix, DenseVector, reshape}
-import breeze.numerics.{exp, log, sqrt}
+import breeze.linalg.DenseVector
 import scalismo.geometry._3D
 import scalismo.image.DiscreteScalarImage
 import scalismo.io.{ActiveShapeModelIO, ImageIO}
@@ -13,7 +12,7 @@ import scalismo.sampling.algorithms.MetropolisHastings
 import scalismo.sampling.evaluators.ProductEvaluator
 import scalismo.sampling.loggers.AcceptRejectLogger
 import scalismo.sampling.proposals.MixtureProposal
-import scalismo.sampling.{DistributionEvaluator, ProposalGenerator, TransitionRatio}
+import scalismo.sampling.{DistributionEvaluator, ProposalGenerator}
 import scalismo.statisticalmodel.asm.{ActiveShapeModel, PreprocessedImage}
 import scalismo.ui.ShapeModelView
 import scalismo.ui.api.SimpleAPI.ScalismoUI
@@ -22,7 +21,7 @@ import shape_modelling.MCMC._
 import scala.util.Random
 
 object Segmentation {
-  private[this] var ui : ScalismoUI = _
+  private[this] var ui: ScalismoUI = _
 
   def main(args: Array[String]) {
 
@@ -49,11 +48,11 @@ object Segmentation {
     //runPoseFitting(asm, image)
     var coeffs = ShapeParameters(DenseVector.zeros[Float](3), DenseVector.zeros[Float](3), asm.statisticalModel.coefficients(asm.statisticalModel.mean))
 
-    0 until coeffs.modelCoefficients.length foreach(i => {
-      coeffs = runShapeFittingForComponents(asm, prepImg, coeffs, i)
-    })
+      0 until coeffs.modelCoefficients.length / 20 foreach(i => {
+        coeffs = runShapeFittingForComponents(asm, prepImg, coeffs, i)
+      })
 
-    coeffs = runShapeFitting(asm, prepImg, coeffs)
+    coeffs = runShapeFittingWithAdapting(asm, prepImg, coeffs)
   }
 
   def runPoseFitting(asm: ActiveShapeModel, image: DiscreteScalarImage[_3D, Float]): Unit = {
@@ -70,9 +69,9 @@ object Segmentation {
     val mhIt = chain.iterator(initialParameters)
 
     val rigidTransSpace = RigidTransformationSpace[_3D]()
-    var bestCoefs : ShapeParameters = null
-    var bestProb : Double = 0
-    val samplingIterator = for(theta <- mhIt) yield {
+    var bestCoefs: ShapeParameters = null
+    var bestProb: Double = 0
+    val samplingIterator = for (theta <- mhIt) yield {
 
       val prob = posteriorEvaluator.logValue(theta)
       System.out.println(prob)
@@ -97,7 +96,7 @@ object Segmentation {
     samplingIterator.take(40).toIndexedSeq
   }
 
-  def runShapeFittingForComponents(asm: ActiveShapeModel, prepImg : PreprocessedImage, initialParameters : ShapeParameters, tillComponentIndex: Int): ShapeParameters = {
+  def runShapeFittingForComponents(asm: ActiveShapeModel, prepImg: PreprocessedImage, initialParameters: ShapeParameters, tillComponentIndex: Int): ShapeParameters = {
     val logger = new AcceptRejectLogger[ShapeParameters] {
       private var accepted = 0f
       private var all = 0f
@@ -123,13 +122,13 @@ object Segmentation {
     val posteriorEvaluator = ProductEvaluator(MCMC.ShapePriorEvaluator(asm.statisticalModel), IntensityBasedLikeliHoodEvaluator(asm, prepImg))
 
     // Deviations should match deviations of model
-    val poseGenerator =  MixtureProposal.fromProposalsWithTransition((0.8, ShapeUpdateProposalFirstComponents(asm.statisticalModel.rank, 0.09f, tillComponentIndex)), (0.2, ShapeUpdateProposalFirstComponents(asm.statisticalModel.rank, 0.2f, tillComponentIndex)))(rnd=new Random())
+    val poseGenerator = MixtureProposal.fromProposalsWithTransition((0.8, ShapeUpdateProposalFirstComponents(asm.statisticalModel.rank, 0.09f, tillComponentIndex)), (0.2, ShapeUpdateProposalFirstComponents(asm.statisticalModel.rank, 0.2f, tillComponentIndex)))(rnd = new Random())
 
     val chain = MetropolisHastings(poseGenerator, posteriorEvaluator, logger)(new Random())
 
     val mhIt = chain.iterator(initialParameters)
 
-    val samplingIterator = for(theta <- mhIt) yield {
+    val samplingIterator = for (theta <- mhIt) yield {
       theta
     }
 
@@ -142,7 +141,7 @@ object Segmentation {
     bestSample
   }
 
-  def runShapeFitting(asm: ActiveShapeModel, prepImg : PreprocessedImage, initialParameters : ShapeParameters): ShapeParameters = {
+  def runShapeFitting(asm: ActiveShapeModel, prepImg: PreprocessedImage, initialParameters: ShapeParameters): ShapeParameters = {
     val logger = new AcceptRejectLogger[ShapeParameters] {
       private var accepted = 0f
       private var all = 0f
@@ -167,69 +166,59 @@ object Segmentation {
     val posteriorEvaluator = ProductEvaluator(MCMC.ShapePriorEvaluator(asm.statisticalModel), IntensityBasedLikeliHoodEvaluator(asm, prepImg))
 
     // Deviations should match deviations of model
-    val poseGenerator =  MixtureProposal.fromProposalsWithTransition((0.7, ShapeUpdateProposal(asm.statisticalModel.rank, 0.05f)), (0.3, ShapeUpdateProposal(asm.statisticalModel.rank, 1f)))(rnd=new Random())
+    val poseGenerator = MixtureProposal.fromProposalsWithTransition((0.7, ShapeUpdateProposal(asm.statisticalModel.rank, 0.1f)))(rnd = new Random())
 
-    val chain = MetropolisHastings(poseGenerator, posteriorEvaluator, logger)(new Random())
+    val chain =  new MetropolisHastings[ShapeParameters](poseGenerator, posteriorEvaluator, logger)(new Random())
 
     val mhIt = chain.iterator(initialParameters)
 
-    val samplingIterator = for(theta <- mhIt) yield {
+    val samplingIterator = for (theta <- mhIt) yield {
       theta
     }
 
-    val take = 200
-    val samples = samplingIterator.drop(take / 12).take(take)
-    val bestSample = samples.maxBy(posteriorEvaluator.logValue)
+    val samples = samplingIterator.take(2000).toIndexedSeq
 
-    // TODO - what is burn in factor, how to get rid of it (thats why drop is here)
-    // http://background.uchicago.edu/~whu/Courses/Ast321_11/Projects/mcmc_helsby.pdf
-    samplingIterator.take(2000).toIndexedSeq
-
-    bestSample
+    samples.maxBy(posteriorEvaluator.logValue)
   }
 
-  // Adaptive covariance
-  var learn_scale = 0.5
-  var sampleDiscard = 200
-  var adaptScale = false
-  var sampleLag = 20
-  var meanEst = DenseVector.ones(25)
-  var covEst = 0.05f * DenseMatrix.eye[Float](25)
-  var globalScale = Math.pow(2.38, 2) / 25
-  var accStar = 0.234
-  def adapt(iteration : Int, stepOutput : ShapeParameters, logAcceptance : Double) : Unit = {
+  def runShapeFittingWithAdapting(asm: ActiveShapeModel, prepImg: PreprocessedImage, initialParameters: ShapeParameters): ShapeParameters = {
+    val logger = new AcceptRejectLogger[ShapeParameters] {
+      private var accepted = 0f
+      private var all = 0f
 
-    if (iteration > sampleDiscard) {
-      learn_scale = 1.0 / sqrt(iteration - sampleDiscard + 1.0)
+      override def accept(current: ShapeParameters, sample: ShapeParameters, generator: ProposalGenerator[ShapeParameters], evaluator: DistributionEvaluator[ShapeParameters]): Unit = {
+        accepted += 1
+        all += 1
 
-      if (adaptScale) {
-        scaleAdapt(learn_scale, stepOutput, logAcceptance)
+        val ratio = accepted / all
+        println(s"Accepted proposal generated by $generator (probability ${evaluator.logValue(sample)}) : $ratio")
       }
 
-      if (iteration % sampleLag == 0) {
-        meanAndCovAdapt(learn_scale, stepOutput)
+      override def reject(current: ShapeParameters, sample: ShapeParameters, generator: ProposalGenerator[ShapeParameters], evaluator: DistributionEvaluator[ShapeParameters]): Unit = {
+        all += 1
+        val ratio = accepted / all
+        println(s"Rejected proposal generated by $generator (probability ${evaluator.logValue(sample)}) : $ratio")
       }
     }
-  }
 
-  def scaleAdapt(learn_scale : Double, step_output : ShapeParameters, logAcceptance : Double) : Unit = {
-    // implement this
-    //        self.globalscale = exp(log(self.globalscale) + learn_scale * (exp(step_output.log_ratio) - self.accstar))
-    globalScale = exp(log(globalScale) + learn_scale + (exp(logAcceptance) - accStar))
-  }
+    System.out.println("Running runShapeFitting...")
 
-  //        current_1d=reshape(self.current_sample_object.samples, (self.distribution.dimension,))
-  //        difference=current_1d - self.mean_est
-  //        self.cov_est += learn_scale * (outer(difference, difference) - self.cov_est)
-  //        self.mean_est += learn_scale * (current_1d - self.mean_est)
-  //        #print "mean estimate: ", self.mean_est
-  def meanAndCovAdapt(learnScale : Double, stepOutput : ShapeParameters) : Unit = {
-    // implement this
-    var current = stepOutput.modelCoefficients
+    val posteriorEvaluator = ProductEvaluator(MCMC.ShapePriorEvaluator(asm.statisticalModel), IntensityBasedLikeliHoodEvaluator(asm, prepImg))
 
-    var diff = DenseVector(current - meanEst)
+    // Deviations should match deviations of model
+    val proposal = ShapeUpdateProposalAdapting(paramVectorSize = asm.statisticalModel.rank, stdev = 0.2f, sampleDiscard = 20, sampleLag = 2, accStar = 0.234)
+    //val poseGenerator = MixtureProposal.fromProposalsWithTransition((0.7, proposal))(rnd = new Random())
 
-    meanEst += learnScale * diff
-    covEst += learnScale * (DenseMatrix(diff.t * diff) - covEst)
+    val chain =  new AdaptiveMetropolis[ShapeParameters](proposal, posteriorEvaluator, logger)(new Random())
+
+    val mhIt = chain.iterator(initialParameters)
+
+    val samplingIterator = for (theta <- mhIt) yield {
+      theta
+    }
+
+    val samples = samplingIterator.take(2000).toIndexedSeq
+
+    samples.maxBy(posteriorEvaluator.logValue)
   }
 }
