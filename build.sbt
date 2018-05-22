@@ -22,9 +22,9 @@ libraryDependencies  ++= {
   )
 }
 
-assemblyJarName in assembly := "exectuable.jar"
+assemblyJarName in assembly := "executable.jar"
 
-mainClass in assembly := Some("com.example.ExampleApp")
+mainClass in assembly := Some("shape_modelling.SegmentationNonUI")
 
 
 assemblyMergeStrategy in assembly <<= (assemblyMergeStrategy in assembly) { (old) =>
