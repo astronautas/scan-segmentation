@@ -11,7 +11,7 @@ object LikelihoodChecker {
   def likelihoodThatMeshFitsImage(asm: ActiveShapeModel, mesh: TriangleMesh, preprocessedImage: PreprocessedImage): Double = {
 
     val ids = asm.profiles.ids
-    var parList = ArrayBuffer.fill(ids.length)(Double.NegativeInfinity)
+    var parList = ArrayBuffer.fill(ids.length)(0.0)
 
     asm.profiles.ids.par.zipWithIndex foreach { case (id, i) =>
       val profile = asm.profiles(id)
