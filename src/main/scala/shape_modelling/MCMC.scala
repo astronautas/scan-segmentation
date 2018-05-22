@@ -11,11 +11,11 @@ object MCMC {
 
   case class ShapeParameters(rotationParameters: DenseVector[Float], translationParameters: DenseVector[Float], modelCoefficients: DenseVector[Float])
 
-  case class RotationUpdateProposal(stdev: Float) extends
+  case class RotationUpdateProposal(paramVectorSize: Int, stdev: Float) extends
     ProposalGenerator[ShapeParameters] with TransitionProbability[ShapeParameters] with SymmetricTransition[ShapeParameters] {
 
-    val perturbationDistr = new MultivariateNormalDistribution(DenseVector.zeros(3),
-      DenseMatrix.eye[Float](3) * stdev)
+    val perturbationDistr = new MultivariateNormalDistribution(DenseVector.zeros(paramVectorSize),
+      DenseMatrix.eye[Float](paramVectorSize) * stdev)
 
     def propose(theta: ShapeParameters): ShapeParameters = {
       ShapeParameters(theta.rotationParameters + perturbationDistr.sample, theta.translationParameters, theta.modelCoefficients)
@@ -27,14 +27,14 @@ object MCMC {
     }
   }
 
-  case class TranslationUpdateProposal(stdev: Float) extends
+  case class TranslationUpdateProposal(paramVectorSize: Int, stdev: Float) extends
     ProposalGenerator[ShapeParameters] with TransitionProbability[ShapeParameters] with SymmetricTransition[ShapeParameters] {
 
-    val perturbationDistr = new MultivariateNormalDistribution(DenseVector.zeros(3),
-      DenseMatrix.eye[Float](3) * stdev)
+    val perturbationDistr = new MultivariateNormalDistribution(DenseVector.zeros(paramVectorSize),
+      DenseMatrix.eye[Float](paramVectorSize) * stdev)
 
     def propose(theta: ShapeParameters): ShapeParameters = {
-      ShapeParameters(theta.rotationParameters + perturbationDistr.sample, theta.translationParameters, theta.modelCoefficients)
+      ShapeParameters(theta.rotationParameters, theta.translationParameters + perturbationDistr.sample, theta.modelCoefficients)
     }
 
     override def logTransitionProbability(from: ShapeParameters, to: ShapeParameters): Double = {
