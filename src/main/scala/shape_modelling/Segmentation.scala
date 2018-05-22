@@ -37,7 +37,7 @@ object Segmentation {
 	// create a visualization window
 	ui = ScalismoUI()
 
-	val targetname = "13"
+	val targetname = "37"
     val asm_orig_aligned = ActiveShapeModelIO.readActiveShapeModel(new File("handedData/femur-asm.h5")).get
 	val asm_for_cyclic_exclusive = asm_orig_aligned
     val asm_for_cyclic_repositioning = asm_orig_aligned
@@ -66,9 +66,9 @@ object Segmentation {
     var coeffs_cyclic_exclusive = ShapeParameters(DenseVector.zeros[Float](3), DenseVector.zeros[Float](3), asm_for_cyclic_exclusive.statisticalModel.coefficients(asm_for_cyclic_exclusive.statisticalModel.mean))
 	for (outer <- 1 to 10) {
 	  println("Running iteration " + outer)
-	  for (i <- 1 to 10) {
-		println("Running iteration " + outer + " with variance " + (0.5f/(i*i)) + " and takeSize " + 50)
-		coeffs_cyclic_exclusive = runShapeFittingVariable(asm_for_cyclic_exclusive, prepImg, coeffs_cyclic_exclusive, 0.5f/(i*i), 10)
+	  for (i <- outer to 10) {
+		println("Running iteration " + outer + " with variance " + (0.5f/(i*i)) + " and takeSize " + 500)
+		coeffs_cyclic_exclusive = runShapeFittingVariable(asm_for_cyclic_exclusive, prepImg, coeffs_cyclic_exclusive, 0.5f/(i*i), 500)
 		println("-----------------------------DONE--------------------------------------")
 	  }
 	}
@@ -90,9 +90,9 @@ object Segmentation {
     var coeffs_cyclic_repositioning = ShapeParameters(DenseVector.zeros[Float](3), DenseVector.zeros[Float](3), asm_for_cyclic_exclusive.statisticalModel.coefficients(asm_for_cyclic_exclusive.statisticalModel.mean))
 	for (outer <- 1 to 10) {
 	  println("Running iteration " + outer)
-	  for (i <- 1 to 10) {
-		println("Running iteration " + outer + " with variance " + (0.5f/(i*i)) + " and takeSize " + 50)
-		coeffs_cyclic_repositioning = runShapeFittingVariable(asm_for_cyclic_repositioning, prepImg, coeffs_cyclic_repositioning, 0.5f/(i*i), 10)
+	  for (i <- outer to 10) {
+		println("Running iteration " + outer + " with variance " + (0.5f/(i*i)) + " and takeSize " + 500)
+		coeffs_cyclic_repositioning = runShapeFittingVariable(asm_for_cyclic_repositioning, prepImg, coeffs_cyclic_repositioning, 0.5f/(i*i), 500)
 		println("-----------------------------DONE--------------------------------------")
 	  }
 	  runPositionFittingVariable(asm_for_cyclic_repositioning, prepImg, coeffs_cyclic_repositioning, 0.05f, 0.05f, 20)
