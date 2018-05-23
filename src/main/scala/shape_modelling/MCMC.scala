@@ -52,7 +52,7 @@ object MCMC {
     override def propose(theta: ShapeParameters): ShapeParameters = {
       val perturbation = perturbationDistr.sample()
 
-      val thetaPrime = ShapeParameters(theta.rotationParameters, theta.translationParameters, theta.modelCoefficients + perturbationDistr.sample)
+      val thetaPrime = ShapeParameters(theta.rotationParameters, theta.translationParameters, theta.modelCoefficients + perturbation)
       thetaPrime
     }
 
@@ -168,7 +168,7 @@ object MCMC {
   }
 
   case class IntensityBasedLikeliHoodEvaluator(asm: ActiveShapeModel, preprocessedImage: PreprocessedImage,
-                                               sdev: Double = 1.0) extends DistributionEvaluator[ShapeParameters] {
+                                               sdev: Double = 0.5) extends DistributionEvaluator[ShapeParameters] {
 
     val uncertainty = NDimensionalNormalDistribution(Vector3D(0f, 0f, 0f), SquareMatrix.eye[_3D] * (sdev * sdev))
 
