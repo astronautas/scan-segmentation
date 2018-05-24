@@ -23,6 +23,6 @@ object Utils {
       sum = distVector(0) + distVector(1) + distVector(2)
     })
 
-    sum
+    sum / origin.pointIds.length
   }
 }
