@@ -5,7 +5,7 @@ import java.io.File
 import breeze.linalg.DenseVector
 import scalismo.geometry._3D
 import scalismo.image.DiscreteScalarImage
-import scalismo.io.{ActiveShapeModelIO, ImageIO}
+import scalismo.io.{ActiveShapeModelIO, ImageIO, LandmarkIO}
 import scalismo.numerics.UniformSampler
 import scalismo.registration.RigidTransformationSpace
 import scalismo.sampling.algorithms.MetropolisHastings
@@ -34,7 +34,7 @@ object SegmentationNonUI {
     ui = ScalismoUI()
 
     val asm = ActiveShapeModelIO.readActiveShapeModel(new File("handedDataNonAligned/femur-asm.h5")).get
-    val image = ImageIO.read3DScalarImage[Short](new File("handedDataNonAligned/targets/1.nii")).get.map(_.toFloat)
+    val image = ImageIO.read3DScalarImage[Short](new File("handedDataNonAligned/targets/13.nii")).get.map(_.toFloat)
 
     ui.show(asm.statisticalModel, "model")
     ui.show(image, "image")
@@ -76,10 +76,17 @@ object SegmentationNonUI {
 
     System.out.println("Running runShapeFitting...")
 
-    val posteriorEvaluator = ProductEvaluator(MCMC.ShapePriorEvaluator(asm.statisticalModel), IntensityBasedLikeliHoodEvaluator(asm, prepImg))
+    val modelLms = LandmarkIO.readLandmarksJson[_3D](new File("handedDataNonAligned/femur-landmarks.json")).get
+    val modelLmIds =  modelLms.map(l => asm.statisticalModel.mean.pointId(l.point).get)
+    val targetLms = LandmarkIO.readLandmarksJson[_3D](new File("handedDataNonAligned/targets/13.json")).get
+    val targetPoints = targetLms.map(l => l.point)
+    val correspondences = modelLmIds.zip(targetPoints)
+
+    val posteriorEvaluator = ProductEvaluator(MCMC.ShapePriorEvaluator(asm.statisticalModel),
+      CorespondenceBasedEvaluator(asm.statisticalModel, correspondences, 1f))
 
     // Deviations should match deviations of model
-    val poseGenerator = MixtureProposal.fromProposalsWithTransition((1, ShapeUpdateProposal(asm.statisticalModel.rank, 0.0011f)))(rnd = new Random())
+    val poseGenerator = MixtureProposal.fromProposalsWithTransition((1, ShapeUpdateProposal(asm.statisticalModel.rank, 0.1f)))(rnd = new Random())
 
     val chain = MetropolisHastings[ShapeParameters](poseGenerator, posteriorEvaluator, logger)(new Random())
 
