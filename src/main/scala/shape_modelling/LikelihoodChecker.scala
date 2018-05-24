@@ -7,11 +7,13 @@ import scala.collection.mutable.ArrayBuffer
 
 object LikelihoodChecker {
 
+  private final val OUT_OF_BOUNDS_PROBABILITY = -400000.0
+
   // Mesh has to be in correspondence with asm
   def likelihoodThatMeshFitsImage(asm: ActiveShapeModel, mesh: TriangleMesh, preprocessedImage: PreprocessedImage): Double = {
 
     val ids = asm.profiles.ids
-    var parList = ArrayBuffer.fill(ids.length)(0.0)
+    var parList = ArrayBuffer.fill(ids.length)(OUT_OF_BOUNDS_PROBABILITY)
 
     asm.profiles.ids.par.zipWithIndex foreach { case (id, i) =>
       val profile = asm.profiles(id)
@@ -36,8 +38,6 @@ object LikelihoodChecker {
 
     val ids = asm.profiles.ids
 
-    var parList = ArrayBuffer.fill(ids.length)(Double.NegativeInfinity)
-
     val likelihoods = for (id <- ids) yield {
       val profile = asm.profiles(id)
       val profilePointOnMesh = mesh.point(profile.pointId)
@@ -52,7 +52,7 @@ object LikelihoodChecker {
       if (featureAtPoint != null) {
         profile.distribution.logpdf(featureAtPoint)
       } else {
-        0
+        OUT_OF_BOUNDS_PROBABILITY
       }
     }
 

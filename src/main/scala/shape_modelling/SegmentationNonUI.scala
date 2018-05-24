@@ -31,13 +31,13 @@ object SegmentationNonUI {
     // Your application code goes below here. Below is a dummy application that reads a mesh and displays it
 
     // create a visualization window
-    //ui = ScalismoUI()
+    ui = ScalismoUI()
 
     val asm = ActiveShapeModelIO.readActiveShapeModel(new File("handedDataNonAligned/femur-asm.h5")).get
-    val image = ImageIO.read3DScalarImage[Short](new File("handedDataNonAligned/targets/37.nii")).get.map(_.toFloat)
+    val image = ImageIO.read3DScalarImage[Short](new File("handedDataNonAligned/targets/1.nii")).get.map(_.toFloat)
 
-    //ui.show(asm.statisticalModel, "model")
-    //ui.show(image, "image")
+    ui.show(asm.statisticalModel, "model")
+    ui.show(image, "image")
 
     // PREPROCESSING
     System.out.println("Preprocessing...")
@@ -86,7 +86,7 @@ object SegmentationNonUI {
     val mhIt = chain.iterator(initialParameters)
 
     val samplingIterator = for (theta <- mhIt) yield {
-      //ui.setCoefficientsOf("model", theta.modelCoefficients)
+      ui.setCoefficientsOf("model", theta.modelCoefficients)
       theta
     }
 
