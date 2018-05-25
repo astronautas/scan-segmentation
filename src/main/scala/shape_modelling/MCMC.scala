@@ -177,7 +177,8 @@ object MCMC {
     val uncertainty = NDimensionalNormalDistribution(Vector3D(0f, 0f, 0f), SquareMatrix.eye[_3D] * (sdev * sdev))
 
     override def logValue(theta: ShapeParameters): Double = {
-      val value = LikelihoodChecker.likelihoodThatMeshFitsImage(asm, asm.statisticalModel.instance(theta.modelCoefficients), preprocessedImage)
+      val value = LikelihoodChecker.likelihoodThatMeshFitsImage(asm, theta, preprocessedImage)
+      //println("IntensityBasedLikeliHoodEvaluator: returning "+value)
       value
     }
   }
@@ -185,6 +186,7 @@ object MCMC {
   // Check how likely the prior is (concrete instance from params), with a concern to the model
   case class ShapePriorEvaluator(model: StatisticalMeshModel) extends DistributionEvaluator[ShapeParameters] {
     override def logValue(theta: ShapeParameters): Double = {
+      //println("ShapePriorEvaluator: returning "+model.gp.logpdf(theta.modelCoefficients))
       model.gp.logpdf(theta.modelCoefficients)
     }
   }
