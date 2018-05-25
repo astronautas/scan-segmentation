@@ -1,5 +1,6 @@
 package shape_modelling
 
+import scalismo.geometry
 import scalismo.geometry.{Point, _3D}
 import scalismo.mesh.TriangleMesh
 
@@ -13,4 +14,15 @@ object Utils {
 ////
 ////    sum
 //  }
+
+  def averageDistance(origin: TriangleMesh, target: TriangleMesh): Unit = {
+    var sum = 0f
+
+    origin.pointIds.foreach(id => {
+      val distVector: geometry.Vector[_3D] = target.point(id) - origin.point(id)
+      sum = distVector(0) + distVector(1) + distVector(2)
+    })
+
+    sum / origin.pointIds.length
+  }
 }

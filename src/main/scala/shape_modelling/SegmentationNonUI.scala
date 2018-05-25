@@ -82,8 +82,7 @@ object SegmentationNonUI {
     val targetPoints = targetLms.map(l => l.point)
     val correspondences = modelLmIds.zip(targetPoints)
 
-    val posteriorEvaluator = ProductEvaluator(MCMC.ShapePriorEvaluator(asm.statisticalModel),
-      CorespondenceBasedEvaluator(asm.statisticalModel, correspondences, 1f))
+    val posteriorEvaluator = ProductEvaluator(MCMC.ShapePriorEvaluator(asm.statisticalModel), IntensityBasedLikeliHoodEvaluator(asm, prepImg))
 
     // Deviations should match deviations of model
     val poseGenerator = MixtureProposal.fromProposalsWithTransition((1, ShapeUpdateProposal(asm.statisticalModel.rank, 0.1f)))(rnd = new Random())
