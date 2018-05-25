@@ -24,8 +24,7 @@ libraryDependencies  ++= {
 
 assemblyJarName in assembly := "executable.jar"
 
-mainClass in assembly := Some("shape_modelling.SegmentationNonUI")
-
+mainClass in assembly := Some("shape_modelling.Segmentation")
 
 assemblyMergeStrategy in assembly <<= (assemblyMergeStrategy in assembly) { (old) =>
 {

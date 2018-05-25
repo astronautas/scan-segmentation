@@ -1,11 +1,7 @@
 package shape_modelling
 
-import breeze.linalg.DenseVector
-import scalismo.geometry.{Point3D, _3D}
 import scalismo.mesh.TriangleMesh
-import scalismo.registration.RigidTransformationSpace
 import scalismo.statisticalmodel.asm.{ActiveShapeModel, PreprocessedImage}
-import shape_modelling.MCMC.ShapeParameters
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -14,18 +10,7 @@ object LikelihoodChecker {
   private final val OUT_OF_BOUNDS_PROBABILITY = -400000.0
 
   // Mesh has to be in correspondence with asm
-  def likelihoodThatMeshFitsImage(asm: ActiveShapeModel, theta: ShapeParameters, preprocessedImage: PreprocessedImage): Double = {
-
-    // Need to consider rot/trans as well, so we first apply the transform to the mesh here.
-    var mesh = asm.statisticalModel.instance(theta.modelCoefficients)
-    val current_translation_coeffs = Segmentation.center_of_mass + theta.translationParameters
-    val current_CoM: Point3D = new Point3D(current_translation_coeffs.valueAt(0), current_translation_coeffs.valueAt(1), current_translation_coeffs.valueAt(2))
-
-    val rigidTransSpace = RigidTransformationSpace[_3D](current_CoM)
-    val rigidtrans = rigidTransSpace.transformForParameters(DenseVector.vertcat(theta.translationParameters, theta.rotationParameters))
-
-	mesh = mesh.transform(rigidtrans)
-
+  def likelihoodThatMeshFitsImage(asm: ActiveShapeModel, mesh: TriangleMesh, preprocessedImage: PreprocessedImage): Double = {
     val ids = asm.profiles.ids
     var parList = ArrayBuffer.fill(ids.length)(OUT_OF_BOUNDS_PROBABILITY)
 

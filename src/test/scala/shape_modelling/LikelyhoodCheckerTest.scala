@@ -14,8 +14,7 @@ class LikelyhoodCheckerTest extends TestCase {
   def test(): Unit = {
     scalismo.initialize()
 
-    // I broke this, sorry. Instead of mesh, likelihoodThat[...] now takes theta.
-    /*val asm = ActiveShapeModelIO.readActiveShapeModel(new File("handedDataNonAligned/femur-asm.h5")).get
+    val asm = ActiveShapeModelIO.readActiveShapeModel(new File("handedDataNonAligned/femur-asm.h5")).get
     val image = ImageIO.read3DScalarImage[Short](new File("handedDataNonAligned/test/30.nii")).get.map(_.toFloat)
     val mesh = MeshIO.readMesh(new File("handedDataNonAligned/test/30.stl")).get
 
@@ -23,6 +22,6 @@ class LikelyhoodCheckerTest extends TestCase {
     val parallel = LikelihoodChecker.likelihoodThatMeshFitsImage(asm, mesh, asm.preprocessor(image)) + MCMC.ShapePriorEvaluator(asm.statisticalModel).logValue(coeffs)
     val nonParallel = LikelihoodChecker.likelihoodThatMeshFitsImageNonParallel(asm, mesh, asm.preprocessor(image)) + MCMC.ShapePriorEvaluator(asm.statisticalModel).logValue(coeffs)
 
-    Assert.assertEquals(parallel, nonParallel)*/
+    Assert.assertEquals(parallel, nonParallel)
   }
 }
