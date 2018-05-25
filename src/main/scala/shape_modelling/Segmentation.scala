@@ -218,6 +218,8 @@ object Segmentation {
 	}
 
 
+	// Sets center_of_mass for the given ASM. The idea is that center_of_mass always contains the CoM of the currently used
+	// asm's MEAN MESH (i.e. is not changed by transformations&stuff)
 	def calculate_CoM(asm: ActiveShapeModel): Unit = {
 		var center: geometry.Vector[_3D] = Vector3D(0.0f, 0.0f, 0.0f)
 		val asm_pointIds = asm.statisticalModel.mean.pointIds
