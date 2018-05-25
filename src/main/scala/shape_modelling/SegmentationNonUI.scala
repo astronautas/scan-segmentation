@@ -109,7 +109,7 @@ object SegmentationNonUI {
 
     val posteriorEvaluator = ProductEvaluator(MCMC.ShapePriorEvaluator(asm.statisticalModel), ProximityEvaluator(asm.statisticalModel, samples))
 
-    val poseGenerator = MixtureProposal.fromProposalsWithTransition((0.2, RotationUpdateProposal(asm.statisticalModel.rank, 0.1f)), (0.2, TranslationUpdateProposal(asm.statisticalModel.rank, 0.1f)))(rnd = new Random())
+    val poseGenerator = MixtureProposal.fromProposalsWithTransition((0.2, RotationUpdateProposal(0.1f)), (0.2, TranslationUpdateProposal(0.1f)))(rnd = new Random())
     val chain = MetropolisHastings(poseGenerator, posteriorEvaluator)(new Random())
 
     val initialParameters = ShapeParameters(DenseVector.zeros[Float](3), DenseVector.zeros[Float](3), DenseVector.zeros[Float](asm.statisticalModel.rank))
@@ -150,7 +150,7 @@ object SegmentationNonUI {
 
     val posteriorEvaluator = ProductEvaluator(MCMC.ShapePriorEvaluator(asm.statisticalModel), ProximityEvaluator(asm.statisticalModel, samples))
 
-    val poseGenerator = MixtureProposal.fromProposalsWithTransition((0.2, RotationUpdateProposal(asm.statisticalModel.rank, 0.1f)), (0.2, TranslationUpdateProposal(asm.statisticalModel.rank, 0.1f)))(rnd = new Random())
+    val poseGenerator = MixtureProposal.fromProposalsWithTransition((0.2, RotationUpdateProposal(0.1f)), (0.2, TranslationUpdateProposal(0.1f)))(rnd = new Random())
     val chain = MetropolisHastings(poseGenerator, posteriorEvaluator)(new Random())
 
     val initialParameters = ShapeParameters(DenseVector.zeros[Float](3), DenseVector.zeros[Float](3), DenseVector.zeros[Float](asm.statisticalModel.rank))
@@ -210,7 +210,7 @@ object SegmentationNonUI {
     System.out.println("Running position fitting...")
 
     val posteriorEvaluator = ProductEvaluator(MCMC.ShapePriorEvaluator(asm.statisticalModel), IntensityBasedLikeliHoodEvaluator(asm, prepImg))
-    val positionGenerator = MixtureProposal.fromProposalsWithTransition((0.5, RotationUpdateProposal(asm.statisticalModel.rank, variance_rot)), (0.5, TranslationUpdateProposal(asm.statisticalModel.rank, variance_trans)))(rnd = new Random())
+    val positionGenerator = MixtureProposal.fromProposalsWithTransition((0.5, RotationUpdateProposal(variance_rot)), (0.5, TranslationUpdateProposal(variance_trans)))(rnd = new Random())
 
     val chain = MetropolisHastings(positionGenerator, posteriorEvaluator, logger)(new Random())
     val mhIt = chain.iterator(initialParameters)

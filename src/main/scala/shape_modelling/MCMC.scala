@@ -11,14 +11,16 @@ object MCMC {
 
   case class ShapeParameters(rotationParameters: DenseVector[Float], translationParameters: DenseVector[Float], modelCoefficients: DenseVector[Float])
 
-  case class RotationUpdateProposal(paramVectorSize: Int, stdev: Float) extends
+  case class RotationUpdateProposal(stdev: Float) extends
     ProposalGenerator[ShapeParameters] with TransitionProbability[ShapeParameters] with SymmetricTransition[ShapeParameters] {
 
-    val perturbationDistr = new MultivariateNormalDistribution(DenseVector.zeros(paramVectorSize),
-      DenseMatrix.eye[Float](paramVectorSize) * stdev)
+    val perturbationDistr = new MultivariateNormalDistribution(DenseVector.zeros(3),
+      DenseMatrix.eye[Float](3) * stdev)
 
-    def propose(theta: ShapeParameters): ShapeParameters = {
-      ShapeParameters(theta.rotationParameters + perturbationDistr.sample, theta.translationParameters, theta.modelCoefficients)
+    override def propose(theta: ShapeParameters): ShapeParameters = {
+      val perturbation = perturbationDistr.sample()
+      val thetaPrime = ShapeParameters(theta.rotationParameters + perturbation, theta.translationParameters, theta.modelCoefficients)
+      thetaPrime
     }
 
     override def logTransitionProbability(from: ShapeParameters, to: ShapeParameters): Double = {
@@ -27,14 +29,16 @@ object MCMC {
     }
   }
 
-  case class TranslationUpdateProposal(paramVectorSize: Int, stdev: Float) extends
+  case class TranslationUpdateProposal(stdev: Float) extends
     ProposalGenerator[ShapeParameters] with TransitionProbability[ShapeParameters] with SymmetricTransition[ShapeParameters] {
 
-    val perturbationDistr = new MultivariateNormalDistribution(DenseVector.zeros(paramVectorSize),
-      DenseMatrix.eye[Float](paramVectorSize) * stdev)
+    val perturbationDistr = new MultivariateNormalDistribution(DenseVector.zeros(3),
+      DenseMatrix.eye[Float](3) * stdev)
 
     def propose(theta: ShapeParameters): ShapeParameters = {
-      ShapeParameters(theta.rotationParameters, theta.translationParameters + perturbationDistr.sample, theta.modelCoefficients)
+      val perturbation = perturbationDistr.sample()
+      val thetaPrime = ShapeParameters(theta.rotationParameters, theta.translationParameters + perturbation, theta.modelCoefficients)
+      thetaPrime
     }
 
     override def logTransitionProbability(from: ShapeParameters, to: ShapeParameters): Double = {
