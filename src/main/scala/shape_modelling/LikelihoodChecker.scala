@@ -36,7 +36,7 @@ object LikelihoodChecker {
 
   def likelihoodThatMeshFitsImageFast(asm: ActiveShapeModel, mesh: TriangleMesh, preprocessedImage: PreprocessedImage): Double = {
     if (idsForFast == null) {
-      idsForFast = Utils.selectEveryNth(asm.profiles.ids.toList, 10)
+      idsForFast = Utils.selectEveryNth(asm.profiles.ids.toList, 40)
     }
 
     var parList = ArrayBuffer.fill(idsForFast.length)(OUT_OF_BOUNDS_PROBABILITY)
