@@ -89,9 +89,12 @@ object Segmentation {
 
     println("Running iteration pose fitting with variances rot/trans " + variance_rot + "/" + variance_trans + " and take_size " + pose_take_size)
 
-    coeffs = runPoseFittingOnlyTranslation(fast = false, asm, prepImg, coeffs, variance_rot * 2, variance_trans * 2, pose_take_size /2, 0)
-//    coeffs = runPoseFittingOnlyRotation(fast = false, asm, prepImg, coeffs, variance_rot / 2, variance_trans, pose_take_size /2, 0)
-    coeffs = runPoseFitting(fast = false, asm, prepImg, coeffs, variance_rot, variance_trans, pose_take_size, 0)
+    coeffs = runPoseFittingOnlyTranslationAllAxis(fast = false, asm, prepImg, coeffs, variance_rot * 2, variance_trans * 2, 50, 0)
+    coeffs = runPoseFittingOnlyRotationAlongX(fast = false, asm, prepImg, coeffs, variance_rot, variance_trans, 50, 0)
+    coeffs = runPoseFittingOnlyTranslationAllAxis(fast = false, asm, prepImg, coeffs, variance_rot, variance_trans, 50, 0)
+    coeffs = runPoseFittingOnlyRotationAlongX(fast = false, asm, prepImg, coeffs, variance_rot / 4, variance_trans, 50, 0)
+
+    //coeffs = runPoseFitting(fast = false, asm, prepImg, coeffs, variance_rot, variance_trans, pose_take_size, 0)
 
     println("-----------------------------Saving pose fitted ASM--------------------------------------")
 
@@ -158,14 +161,16 @@ object Segmentation {
   def calculate_CoM(asm: ActiveShapeModel): Unit = {
     var center: geometry.Vector[_3D] = Vector3D(0.0f, 0.0f, 0.0f)
     val asm_pointIds = asm.statisticalModel.mean.pointIds
+
     while (asm_pointIds.hasNext) {
       val next = asm.statisticalModel.mean.point(asm_pointIds.next()).toVector
       center = center + next
     }
+
     center_of_mass = center.map { i: Float => i / asm.statisticalModel.mean.numberOfPoints }.toBreezeVector
   }
 
-  def runPoseFittingOnlyRotation(fast: Boolean, asm: ActiveShapeModel, prepImg: PreprocessedImage, initialParameters: ShapeParameters, variance_rot: Float, variance_trans: Float, takeSize: Int, use_correspondence: Int): ShapeParameters = {
+  def runPoseFittingOnlyRotationAlongX(fast: Boolean, asm: ActiveShapeModel, prepImg: PreprocessedImage, initialParameters: ShapeParameters, variance_rot: Float, variance_trans: Float, takeSize: Int, use_correspondence: Int): ShapeParameters = {
     //val samples = UniformSampler(image.domain.boundingBox, 1000).sample.map(i => i._1)
 
     val logger = new AcceptRejectLogger[ShapeParameters] {
@@ -200,7 +205,7 @@ object Segmentation {
       posteriorEvaluator = IntensityBasedLikelyhoodEvaluators.IntensityBasedLikeliHoodEvaluatorForRigidFitting(asm, prepImg)
     }
 
-    val positionGenerator = MixtureProposal.fromProposalsWithTransition((0.8, RotationUpdateProposal(variance_trans)), (0.2, RotationUpdateProposal(variance_trans * 4)))(rnd = new Random())
+    val positionGenerator = MixtureProposal.fromProposalsWithTransition((0.8, RotationUpdateProposalX(variance_trans)), (0.2, RotationUpdateProposalX(variance_trans * 2)))(rnd = new Random())
 
     val chain = MetropolisHastings(positionGenerator, posteriorEvaluator, logger)(new Random())
     val mhIt = chain.iterator(initialParameters)
@@ -229,7 +234,7 @@ object Segmentation {
 
 
 
-  def runPoseFittingOnlyTranslation(fast: Boolean, asm: ActiveShapeModel, prepImg: PreprocessedImage, initialParameters: ShapeParameters, variance_rot: Float, variance_trans: Float, takeSize: Int, use_correspondence: Int): ShapeParameters = {
+  def runPoseFittingOnlyTranslationAllAxis(fast: Boolean, asm: ActiveShapeModel, prepImg: PreprocessedImage, initialParameters: ShapeParameters, variance_rot: Float, variance_trans: Float, takeSize: Int, use_correspondence: Int): ShapeParameters = {
     //val samples = UniformSampler(image.domain.boundingBox, 1000).sample.map(i => i._1)
 
     val logger = new AcceptRejectLogger[ShapeParameters] {
