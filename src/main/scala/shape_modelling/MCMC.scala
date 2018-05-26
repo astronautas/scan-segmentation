@@ -4,7 +4,6 @@ import breeze.linalg.{DenseMatrix, DenseVector}
 import breeze.numerics.{exp, log, sqrt}
 import scalismo.geometry.{Point, SquareMatrix, Vector3D, _3D}
 import scalismo.sampling.{DistributionEvaluator, ProposalGenerator, SymmetricTransition, TransitionProbability}
-import scalismo.statisticalmodel.asm.{ActiveShapeModel, PreprocessedImage}
 import scalismo.statisticalmodel.{MultivariateNormalDistribution, NDimensionalNormalDistribution, StatisticalMeshModel}
 
 object MCMC {

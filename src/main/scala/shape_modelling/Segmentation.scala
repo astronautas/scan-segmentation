@@ -59,7 +59,7 @@ object Segmentation {
     var shapeStDev = args(6).toFloat
     useUI = args(7).toBoolean
     
-    val targetname = "37"
+    val targetname = "4"
 
     // create a visualization window
     if (useUI) {
@@ -68,11 +68,12 @@ object Segmentation {
 
     // Read data
     asm = ActiveShapeModelIO.readActiveShapeModel(new File(s"$handedDataRootPath/$femurAsmFile")).get
-    val image = ImageIO.read3DScalarImage[Short](new File(s"$handedDataRootPath/targets/$targetname.nii")).get.map(_.toFloat)
+    val image = ImageIO.read3DScalarImage[Short](new File(s"$handedDataRootPath/test/$targetname.nii")).get.map(_.toFloat)
 
     if (useUI) {
       ui.show(asm.statisticalModel, "model_updating")
       ui.show(image, "CT")
+      ui.show(MeshIO.readMesh(new File(s"$handedDataRootPath/test/$targetname.stl")).get, "test4")
     }
 
     calculate_CoM(asm)
@@ -82,8 +83,6 @@ object Segmentation {
     val prepImg: PreprocessedImage = asm.preprocessor(image)
 
 
-
-
     // START POSE FITTING
     println("-------------Doing Pose fitting-------------------------")
     var coeffs = ShapeParameters(DenseVector.zeros[Float](3), DenseVector.zeros[Float](3), asm.statisticalModel.coefficients(asm.statisticalModel.mean))
@@ -91,17 +90,7 @@ object Segmentation {
     println("Running iteration pose fitting with variances rot/trans " + variance_rot + "/" + variance_trans + " and take_size " + pose_take_size)
 
     coeffs = runPoseFittingOnlyTranslation(fast = false, asm, prepImg, coeffs, variance_rot * 2, variance_trans * 2, pose_take_size /2, 0)
-
-    var current_pose_coeffs = center_of_mass + coeffs.translationParameters
-    current_CoM = new Point3D(current_pose_coeffs.valueAt(0), current_pose_coeffs.valueAt(1), current_pose_coeffs.valueAt(2))
-    rigidTransSpace = RigidTransformationSpace[_3D](current_CoM)
-    rigidtrans = rigidTransSpace.transformForParameters(DenseVector.vertcat(coeffs.translationParameters, coeffs.rotationParameters))
-    asm = asm.transform(rigidtrans)
-    calculate_CoM(asm)
-    
-    coeffs = runPoseFittingOnlyRotation(fast = false, asm, prepImg, coeffs, variance_rot * 2, variance_trans * 2, pose_take_size /2, 0)
-
-    //    coeffs = runPoseFitting(fast = true, asm, prepImg, coeffs, variance_rot * 40, variance_trans * 50, pose_take_size / 4, 0)
+//    coeffs = runPoseFittingOnlyRotation(fast = false, asm, prepImg, coeffs, variance_rot / 2, variance_trans, pose_take_size /2, 0)
     coeffs = runPoseFitting(fast = false, asm, prepImg, coeffs, variance_rot, variance_trans, pose_take_size, 0)
 
     println("-----------------------------Saving pose fitted ASM--------------------------------------")
