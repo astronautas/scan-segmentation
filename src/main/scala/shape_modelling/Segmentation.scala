@@ -18,6 +18,7 @@ import scalismo.sampling.{DistributionEvaluator, ProposalGenerator}
 import scalismo.statisticalmodel.asm.{ActiveShapeModel, PreprocessedImage}
 import scalismo.ui.ShapeModelView
 import scalismo.ui.api.SimpleAPI.ScalismoUI
+import shape_modelling.IntensityBasedLikelyhoodEvaluators.IntensityBasedLikeliHoodEvaluatorForRigidFittingFast
 import shape_modelling.MCMC._
 
 import scala.util.Random
@@ -88,7 +89,8 @@ object Segmentation {
     var coeffs = ShapeParameters(DenseVector.zeros[Float](3), DenseVector.zeros[Float](3), asm.statisticalModel.coefficients(asm.statisticalModel.mean))
 
     println("Running iteration pose fitting with variances rot/trans " + variance_rot + "/" + variance_trans + " and take_size " + pose_take_size)
-    coeffs = runPoseFitting(asm, prepImg, coeffs, variance_rot, variance_trans, pose_take_size, 0)
+    coeffs = runPoseFitting(fast = true, asm, prepImg, coeffs, variance_rot, variance_trans, pose_take_size, 0)
+    coeffs = runPoseFitting(fast = false, asm, prepImg, coeffs, variance_rot, variance_trans, pose_take_size, 0)
 
     println("-----------------------------Saving pose fitted ASM--------------------------------------")
 
@@ -123,7 +125,7 @@ object Segmentation {
 
     // Not doing outer iteration right now. I suspect that it's actually counterproductive (time would be better spent on fine-detail fitting).
     coeffs = runShapeFitting(asm, prepImg, coeffs, shapeStDev, shapeTakeSize)
-    coeffs = runPoseFitting(asm, prepImg, coeffs, variance_rot, variance_trans, pose_take_size, 0)
+    coeffs = runPoseFitting(fast = false, asm, prepImg, coeffs, variance_rot, variance_trans, pose_take_size, 0)
 
     println("-----------------Shape Fitting done--------------------------")
 
@@ -163,7 +165,7 @@ object Segmentation {
   }
 
 
-  def runPoseFitting(asm: ActiveShapeModel, prepImg: PreprocessedImage, initialParameters: ShapeParameters, variance_rot: Float, variance_trans: Float, takeSize: Int, use_correspondence: Int): ShapeParameters = {
+  def runPoseFitting(fast: Boolean, asm: ActiveShapeModel, prepImg: PreprocessedImage, initialParameters: ShapeParameters, variance_rot: Float, variance_trans: Float, takeSize: Int, use_correspondence: Int): ShapeParameters = {
     //val samples = UniformSampler(image.domain.boundingBox, 1000).sample.map(i => i._1)
 
     val logger = new AcceptRejectLogger[ShapeParameters] {
@@ -190,7 +192,13 @@ object Segmentation {
     System.out.println("Running position fitting...")
 
     //Use_correspondence: 0 for intensity evaluator, 1 for corr.evaluator, 2 for both
-    var posteriorEvaluator: ProductEvaluator[MCMC.ShapeParameters] = ProductEvaluator(IntensityBasedLikelyhoodEvaluators.IntensityBasedLikeliHoodEvaluatorForRigidFitting(asm, prepImg))
+    var posteriorEvaluator : DistributionEvaluator[ShapeParameters] = null
+
+    if (fast) {
+      posteriorEvaluator = IntensityBasedLikeliHoodEvaluatorForRigidFittingFast(asm, prepImg)
+    } else {
+      posteriorEvaluator = IntensityBasedLikelyhoodEvaluators.IntensityBasedLikeliHoodEvaluatorForRigidFitting(asm, prepImg)
+    }
 
     val positionGenerator = MixtureProposal.fromProposalsWithTransition((0.1, RotationUpdateProposal(variance_rot * 4)), (0.4, RotationUpdateProposal(variance_rot)), (0.4, TranslationUpdateProposal(variance_trans)), (0.1, TranslationUpdateProposal(variance_trans * 4)))(rnd = new Random())
 

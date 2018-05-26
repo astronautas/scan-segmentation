@@ -25,4 +25,7 @@ object Utils {
 
     sum / origin.pointIds.length
   }
+
+  def selectEveryNth[A](l:List[A], n:Int): List[A] =
+    l.zipWithIndex.collect {case (e,i) if ((i+1) % n) == 0 => e} // (i+1) because zipWithIndex is 0-based
 }

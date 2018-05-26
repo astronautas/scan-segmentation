@@ -40,4 +40,25 @@ object IntensityBasedLikelyhoodEvaluators {
       value
     }
   }
+
+  case class IntensityBasedLikeliHoodEvaluatorForRigidFittingFast(asm: ActiveShapeModel, preprocessedImage: PreprocessedImage,
+                                                              sdev: Double = 0.5) extends DistributionEvaluator[ShapeParameters] {
+
+    val uncertainty = NDimensionalNormalDistribution(Vector3D(0f, 0f, 0f), SquareMatrix.eye[_3D] * (sdev * sdev))
+
+    override def logValue(theta: ShapeParameters): Double = {
+      // Need to consider rot/trans as well, so we first apply the transform to the mesh here.
+      var mesh = asm.statisticalModel.instance(theta.modelCoefficients)
+      val current_translation_coeffs = Segmentation.center_of_mass + theta.translationParameters
+      val current_CoM: Point3D = new Point3D(current_translation_coeffs.valueAt(0), current_translation_coeffs.valueAt(1), current_translation_coeffs.valueAt(2))
+
+      val rigidTransSpace = RigidTransformationSpace[_3D](current_CoM)
+      val rigidtrans = rigidTransSpace.transformForParameters(DenseVector.vertcat(theta.translationParameters, theta.rotationParameters))
+
+      mesh = mesh.transform(rigidtrans)
+
+      val value = LikelihoodChecker.likelihoodThatMeshFitsImageFast(asm, mesh, preprocessedImage)
+      value
+    }
+  }
 }
