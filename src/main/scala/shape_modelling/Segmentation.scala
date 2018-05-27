@@ -47,7 +47,7 @@ object Segmentation {
 		var rigidtrans: RigidTransformation[_3D] = null
 
 		if (args.length != 11) {
-			println("args should be of form: <handedData_path><femur_asm_file><variance_rot><variance_trans><pose_take_size><shape_take_size><shape_variance><use_ui(true/false)><path_to_target><variance_scaling_factor>")
+			println("args should be of form: <handedData_path><femur_asm_file><variance_rot><variance_trans><pose_take_size><shape_take_size><shape_variance><use_ui(true/false)><path_to_target><variance_scaling_factor><plot_graph>")
 			println("Remember, path to target needs to be preceded by either targets/ or test/. Variance scaling factor is used to change variance decrement during shape fitting")
 			System.exit(0)
 		}
@@ -66,14 +66,14 @@ object Segmentation {
 		var shapeStDev = args(6).toFloat
 		useUI = args(7).toBoolean
 		var targetname = args(8)
-    var decayParam = args(9).toFloat
-    graph = args(10).toBoolean
+    	var decayParam = args(9).toFloat
+    	graph = args(10).toBoolean
 
 		//val targetname = "4"
 
-    if (graph) {
-      plotter = new HastingsPlotter(frequency = 1)
-    }
+		if (graph) {
+			plotter = new HastingsPlotter(frequency = 1)
+		}
 
 		// create a visualization window
 		if (useUI) {
@@ -114,12 +114,12 @@ object Segmentation {
 		//coeffs = runPoseFitting(fast = true, asm, prepImg, coeffs, variance_rot, variance_trans, pose_take_size*10, 0)
 
 		//Loopy pose:
-		for (i <- 1 to 10) {
+		/*for (i <- 1 to 10) {
 			coeffs = runPoseFitting(fast = false, asm, prepImg, coeffs, variance_rot/i, variance_trans/i, pose_take_size/5, 0)
-		}
+		}*/
 
 		//Normal pose:
-		//coeffs = runPoseFitting(fast = false, asm, prepImg, coeffs, variance_rot, variance_trans, pose_take_size*2, 0)
+		coeffs = runPoseFitting(fast = false, asm, prepImg, coeffs, variance_rot, variance_trans, pose_take_size*2, 0)
 
 		println("-----------------------------Saving pose fitted ASM--------------------------------------")
 
