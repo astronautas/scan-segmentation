@@ -36,7 +36,7 @@ object Segmentation {
   var load_fitted_asm: Boolean = true
   private[this] var ui: ScalismoUI = _
 
-  var plotter = new HastingsPlotter(frequency = 3)
+  var plotter = new HastingsPlotter(frequency = 1)
   var allIts = 0
 	val time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS")
 
@@ -65,7 +65,7 @@ object Segmentation {
 		var shapeStDev = args(6).toFloat
 		useUI = args(7).toBoolean
 		var targetname = args(8)
-		var var_scaling_factor = args(9).toFloat
+    var decayParam = args(9).toFloat
 
 		//val targetname = "4"
 
@@ -96,6 +96,7 @@ object Segmentation {
 		// START POSE FITTING
 		println("-------------Doing Pose fitting-------------------------")
 		var coeffs = ShapeParameters(DenseVector.zeros[Float](3), DenseVector.zeros[Float](3), asm.statisticalModel.coefficients(asm.statisticalModel.mean))
+
 
 		println("Running pose fitting with variances rot/trans " + variance_rot + "/" + variance_trans + " and take_size " + pose_take_size)
 
@@ -137,10 +138,12 @@ object Segmentation {
 
 		coeffs = ShapeParameters(DenseVector.zeros[Float](3), DenseVector.zeros[Float](3), asm.statisticalModel.coefficients(asm.statisticalModel.mean))
 
-		for (i <- 1 to 0) {
-			// Notice var_scaling_factor. Larger values means sharper decay in variance.
-			coeffs = runShapeFitting(asm, prepImg, coeffs, shapeStDev/(var_scaling_factor*i), shapeTakeSize)
-			coeffs = runPoseFitting(fast = false, asm, prepImg, coeffs, variance_rot/(5*var_scaling_factor*i), variance_trans/(var_scaling_factor*i), pose_take_size/5, 0)
+		for (i <- 1 to 10) {
+      var rotSt = (variance_rot.toDouble/(10*i*decayParam.toDouble)).toFloat
+      var transSt = (variance_trans.toDouble/(i*decayParam.toDouble)).toFloat
+      println(s"stDevRot: $rotSt, stDevTrans: $transSt")
+		  coeffs = runShapeFitting(asm, prepImg, coeffs, shapeStDev, shapeTakeSize)
+		  coeffs = runPoseFitting(fast = false, asm, prepImg, coeffs, rotSt, transSt, pose_take_size, 0)
 
 			var curr_pose_coefs = center_of_mass + coeffs.translationParameters
 			current_CoM = new Point3D(curr_pose_coefs.valueAt(0), curr_pose_coefs.valueAt(1), curr_pose_coefs.valueAt(2))
@@ -148,6 +151,8 @@ object Segmentation {
 			rigidtrans = rigidTransSpace.transformForParameters(DenseVector.vertcat(coeffs.translationParameters, coeffs.rotationParameters))
 			asm = asm.transform(rigidtrans)
 			coeffs = ShapeParameters(DenseVector.zeros(3), DenseVector.zeros(3), coeffs.modelCoefficients)
+
+      coeffs = ShapeParameters(DenseVector.zeros(3), DenseVector.zeros(3), coeffs.modelCoefficients)
 		}
 
 
@@ -435,7 +440,11 @@ object Segmentation {
     }
 
     val samples = samplingIterator.drop(takeSize / 10).take(takeSize).toIndexedSeq
-    samples.maxBy(posteriorEvaluator.logValue)
+    val max = samples.maxBy(posteriorEvaluator.logValue)
+    val maxVal = posteriorEvaluator.logValue(max)
+
+    println(s"MAX theta: $maxVal")
+    max
   }
 
   def runShapeFittingForComponents(asm: ActiveShapeModel, prepImg: PreprocessedImage, initialParameters: ShapeParameters, tillComponentIndex: Int): ShapeParameters = {
