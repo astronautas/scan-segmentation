@@ -3,6 +3,7 @@ package shape_modelling
 import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Paths}
+import java.text.SimpleDateFormat
 
 import breeze.linalg.DenseVector
 import scalismo.common.PointId
@@ -37,15 +38,16 @@ object Segmentation {
 
   var plotter = new HastingsPlotter(frequency = 3)
   var allIts = 0
+	val time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS")
 
 	def main(args: Array[String]) {
 		var current_CoM: Point3D = null
 		var rigidTransSpace: RigidTransformationSpace[_3D] = null
 		var rigidtrans: RigidTransformation[_3D] = null
 
-		if (args.length != 9) {
-			println("args should be of form: <handedData_path><femur_asm_file><variance_rot><variance_trans><pose_take_size><shape_take_size><shape_variance><use_ui(true/false)><path_to_target>")
-			println("Remember, path to target needs to be preceded by either targets/ or test/")
+		if (args.length != 10) {
+			println("args should be of form: <handedData_path><femur_asm_file><variance_rot><variance_trans><pose_take_size><shape_take_size><shape_variance><use_ui(true/false)><path_to_target><variance_scaling_factor>")
+			println("Remember, path to target needs to be preceded by either targets/ or test/. Variance scaling factor is used to change variance decrement during shape fitting")
 			System.exit(0)
 		}
 
@@ -63,6 +65,7 @@ object Segmentation {
 		var shapeStDev = args(6).toFloat
 		useUI = args(7).toBoolean
 		var targetname = args(8)
+		var var_scaling_factor = args(9).toFloat
 
 		//val targetname = "4"
 
@@ -94,25 +97,25 @@ object Segmentation {
 		println("-------------Doing Pose fitting-------------------------")
 		var coeffs = ShapeParameters(DenseVector.zeros[Float](3), DenseVector.zeros[Float](3), asm.statisticalModel.coefficients(asm.statisticalModel.mean))
 
-		println("Running iteration pose fitting with variances rot/trans " + variance_rot + "/" + variance_trans + " and take_size " + pose_take_size)
+		println("Running pose fitting with variances rot/trans " + variance_rot + "/" + variance_trans + " and take_size " + pose_take_size)
 
-//		coeffs = runPoseFittingOnlyTranslationAllAxis(fast = false, asm, prepImg, coeffs, variance_rot * 2, variance_trans * 2, pose_take_size/2, 0)
-//		//coeffs = runPoseFittingOnlyRotationAlongX(fast = false, asm, prepImg, coeffs, variance_rot, variance_trans, 250, 0)
-//		coeffs = runPoseFittingOnlyTranslationAllAxis(fast = false, asm, prepImg, coeffs, variance_rot, variance_trans, pose_take_size/2, 0)
-//		//coeffs = runPoseFittingOnlyRotationAlongX(fast = false, asm, prepImg, coeffs, variance_rot / 4, variance_trans, 250, 0)
-//
-//		//coeffs = runPoseFitting(fast = false, asm, prepImg, coeffs, variance_rot, variance_trans, pose_take_size, 0)
+		//coeffs = runPoseFittingOnlyTranslationAllAxis(fast = false, asm, prepImg, coeffs, variance_rot * 2, variance_trans * 2, pose_take_size/2, 0)
+		//coeffs = runPoseFittingOnlyRotationAlongX(fast = false, asm, prepImg, coeffs, variance_rot, variance_trans, 250, 0)
+		//coeffs = runPoseFittingOnlyTranslationAllAxis(fast = false, asm, prepImg, coeffs, variance_rot, variance_trans, pose_take_size/2, 0)
+		//coeffs = runPoseFittingOnlyRotationAlongX(fast = false, asm, prepImg, coeffs, variance_rot / 4, variance_trans, 250, 0)
+
+		coeffs = runPoseFitting(fast = false, asm, prepImg, coeffs, variance_rot, variance_trans, pose_take_size, 0)
 
 		println("-----------------------------Saving pose fitted ASM--------------------------------------")
 
 		// Creating the transformation according to the pose coefficients and rigid transforming the ASM
-//		var curr_pose_coefs = center_of_mass + coeffs.translationParameters
-//		current_CoM = new Point3D(curr_pose_coefs.valueAt(0), curr_pose_coefs.valueAt(1), curr_pose_coefs.valueAt(2))
-//		rigidTransSpace = RigidTransformationSpace[_3D](current_CoM)
-//		rigidtrans = rigidTransSpace.transformForParameters(DenseVector.vertcat(coeffs.translationParameters, coeffs.rotationParameters))
-//		asm = asm.transform(rigidtrans)
-//
-//		ActiveShapeModelIO.writeActiveShapeModel(asm, new File(s"$handedDataRootPath/femur-asm_pose_fitted.h5"))
+		var curr_pose_coefs = center_of_mass + coeffs.translationParameters
+		current_CoM = new Point3D(curr_pose_coefs.valueAt(0), curr_pose_coefs.valueAt(1), curr_pose_coefs.valueAt(2))
+		rigidTransSpace = RigidTransformationSpace[_3D](current_CoM)
+		rigidtrans = rigidTransSpace.transformForParameters(DenseVector.vertcat(coeffs.translationParameters, coeffs.rotationParameters))
+		asm = asm.transform(rigidtrans)
+
+		ActiveShapeModelIO.writeActiveShapeModel(asm, new File(s"$handedDataRootPath/femur-asm_pose_fitted.h5"))
 
 		println("-----------------------------ASM saved--------------------------------------")
 		println("-----------------------------Pose Fitting done--------------------------------------")
@@ -134,15 +137,17 @@ object Segmentation {
 
 		coeffs = ShapeParameters(DenseVector.zeros[Float](3), DenseVector.zeros[Float](3), asm.statisticalModel.coefficients(asm.statisticalModel.mean))
 
-		for (i <- 1 to 10) {
-		  coeffs = runShapeFitting(asm, prepImg, coeffs, shapeStDev/i, shapeTakeSize)
-		  coeffs = runPoseFitting(fast = false, asm, prepImg, coeffs, variance_rot/(10*i), variance_trans/i, pose_take_size/5, 0)
+		for (i <- 1 to 0) {
+			// Notice var_scaling_factor. Larger values means sharper decay in variance.
+			coeffs = runShapeFitting(asm, prepImg, coeffs, shapeStDev/(var_scaling_factor*i), shapeTakeSize)
+			coeffs = runPoseFitting(fast = false, asm, prepImg, coeffs, variance_rot/(5*var_scaling_factor*i), variance_trans/(var_scaling_factor*i), pose_take_size/5, 0)
 
-      var curr_pose_coefs = center_of_mass + coeffs.translationParameters
-      current_CoM = new Point3D(curr_pose_coefs.valueAt(0), curr_pose_coefs.valueAt(1), curr_pose_coefs.valueAt(2))
-      rigidTransSpace = RigidTransformationSpace[_3D](current_CoM)
-      rigidtrans = rigidTransSpace.transformForParameters(DenseVector.vertcat(coeffs.translationParameters, coeffs.rotationParameters))
-      asm = asm.transform(rigidtrans)
+			var curr_pose_coefs = center_of_mass + coeffs.translationParameters
+			current_CoM = new Point3D(curr_pose_coefs.valueAt(0), curr_pose_coefs.valueAt(1), curr_pose_coefs.valueAt(2))
+			rigidTransSpace = RigidTransformationSpace[_3D](current_CoM)
+			rigidtrans = rigidTransSpace.transformForParameters(DenseVector.vertcat(coeffs.translationParameters, coeffs.rotationParameters))
+			asm = asm.transform(rigidtrans)
+			coeffs = ShapeParameters(DenseVector.zeros(3), DenseVector.zeros(3), coeffs.modelCoefficients)
 		}
 
 
@@ -152,6 +157,11 @@ object Segmentation {
 		val result = coeffs.rotationParameters.toString() + "\n" + coeffs.translationParameters.toString() + "\n" + coeffs.modelCoefficients.toString()
 		targetname = targetname.split("/")(1)
 		Files.write(Paths.get(s"test_coeffs_for_$targetname.txt"), result.getBytes(StandardCharsets.UTF_8))
+		for (i <- args.length) {
+			var res = args(i).toString
+			res += " "
+			Files.write(Paths.get(s"test_coeffs_for_$targetname.txt"), res.getBytes(StandardCharsets.UTF_8))
+		}
 
 		var final_mesh = asm.statisticalModel.instance(coeffs.modelCoefficients)
 
