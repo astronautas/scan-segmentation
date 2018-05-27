@@ -65,7 +65,7 @@ object Segmentation {
 		var shapeStDev = args(6).toFloat
 		useUI = args(7).toBoolean
 		var targetname = args(8)
-    var decayParam = args(9).toFloat
+    	var decayParam = args(9).toFloat
 
 		//val targetname = "4"
 
@@ -139,11 +139,11 @@ object Segmentation {
 		coeffs = ShapeParameters(DenseVector.zeros[Float](3), DenseVector.zeros[Float](3), asm.statisticalModel.coefficients(asm.statisticalModel.mean))
 
 		for (i <- 1 to 10) {
-      var rotSt = (variance_rot.toDouble/(10*i*decayParam.toDouble)).toFloat
-      var transSt = (variance_trans.toDouble/(i*decayParam.toDouble)).toFloat
-      println(s"stDevRot: $rotSt, stDevTrans: $transSt")
-		  coeffs = runShapeFitting(asm, prepImg, coeffs, shapeStDev, shapeTakeSize)
-		  coeffs = runPoseFitting(fast = false, asm, prepImg, coeffs, rotSt, transSt, pose_take_size, 0)
+      		var rotSt = (variance_rot.toDouble/(10*i*decayParam.toDouble)).toFloat
+      		var transSt = (variance_trans.toDouble/(i*decayParam.toDouble)).toFloat
+      		println(s"stDevRot: $rotSt, stDevTrans: $transSt")
+			coeffs = runShapeFitting(asm, prepImg, coeffs, shapeStDev, shapeTakeSize)
+			coeffs = runPoseFitting(fast = false, asm, prepImg, coeffs, rotSt, transSt, pose_take_size, 0)
 
 			var curr_pose_coefs = center_of_mass + coeffs.translationParameters
 			current_CoM = new Point3D(curr_pose_coefs.valueAt(0), curr_pose_coefs.valueAt(1), curr_pose_coefs.valueAt(2))
@@ -151,8 +151,6 @@ object Segmentation {
 			rigidtrans = rigidTransSpace.transformForParameters(DenseVector.vertcat(coeffs.translationParameters, coeffs.rotationParameters))
 			asm = asm.transform(rigidtrans)
 			coeffs = ShapeParameters(DenseVector.zeros(3), DenseVector.zeros(3), coeffs.modelCoefficients)
-
-      coeffs = ShapeParameters(DenseVector.zeros(3), DenseVector.zeros(3), coeffs.modelCoefficients)
 		}
 
 
