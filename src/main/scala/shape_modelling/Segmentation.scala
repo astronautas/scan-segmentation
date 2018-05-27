@@ -36,7 +36,8 @@ object Segmentation {
   var load_fitted_asm: Boolean = false
   private[this] var ui: ScalismoUI = _
 
-  //var plotter = new HastingsPlotter(frequency = 1)
+  var plotter : HastingsPlotter = _
+  var graph : Boolean = false
   var allIts = 0
 	val time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS")
 
@@ -65,9 +66,14 @@ object Segmentation {
 		var shapeStDev = args(6).toFloat
 		useUI = args(7).toBoolean
 		var targetname = args(8)
-    	var decayParam = args(9).toFloat
+    var decayParam = args(9).toFloat
+    graph = args(10).toBoolean
 
 		//val targetname = "4"
+
+    if (graph) {
+      plotter = new HastingsPlotter(frequency = 1)
+    }
 
 		// create a visualization window
 		if (useUI) {
@@ -336,7 +342,10 @@ object Segmentation {
       private var all = 0f
 
       override def accept(current: ShapeParameters, sample: ShapeParameters, generator: ProposalGenerator[ShapeParameters], evaluator: DistributionEvaluator[ShapeParameters]): Unit = {
-        //plotter.offer(allIts.toDouble, evaluator.logValue(sample))
+
+        if (graph) {
+          plotter.offer(allIts.toDouble, evaluator.logValue(sample))
+        }
 
         accepted += 1
         all += 1
@@ -401,7 +410,9 @@ object Segmentation {
       private var all = 0f
 
       override def accept(current: ShapeParameters, sample: ShapeParameters, generator: ProposalGenerator[ShapeParameters], evaluator: DistributionEvaluator[ShapeParameters]): Unit = {
-        //plotter.offer(allIts.toDouble, evaluator.logValue(sample))
+        if (graph) {
+          plotter.offer(allIts.toDouble, evaluator.logValue(sample))
+        }
 
         accepted += 1
         all += 1
