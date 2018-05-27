@@ -35,125 +35,131 @@ object Segmentation {
   var load_fitted_asm: Boolean = true
   private[this] var ui: ScalismoUI = _
 
-  def main(args: Array[String]) {
-    var current_CoM: Point3D = null
-    var rigidTransSpace: RigidTransformationSpace[_3D] = null
-    var rigidtrans: RigidTransformation[_3D] = null
+	def main(args: Array[String]) {
+		var current_CoM: Point3D = null
+		var rigidTransSpace: RigidTransformationSpace[_3D] = null
+		var rigidtrans: RigidTransformation[_3D] = null
 
-    if (args.length == 0) {
-      println("Provide the root path for handed data (i.e. handedData)")
-      System.exit(0)
-    }
+		if (args.length != 9) {
+			println("args should be of form: <handedData_path><femur_asm_file><variance_rot><variance_trans><pose_take_size><shape_take_size><shape_variance><use_ui(true/false)><path_to_target>")
+			println("Remember, path to target needs to be preceded by either targets/ or test/")
+			System.exit(0)
+		}
 
-    // required to initialize native libraries (VTK, HDF5 ..)
-    scalismo.initialize()
+		// required to initialize native libraries (VTK, HDF5 ..)
+		scalismo.initialize()
 
-    // Your application code goes below here. Below is a dummy application that reads a mesh and displays it
+		// Your application code goes below here. Below is a dummy application that reads a mesh and displays it
 
-    val handedDataRootPath = args(0)
-    val femurAsmFile = args(1)
-    var variance_rot = args(2).toFloat
-    var variance_trans = args(3).toFloat
-    var pose_take_size = args(4).toInt
-    var shapeTakeSize = args(5).toInt
-    var shapeStDev = args(6).toFloat
-    useUI = args(7).toBoolean
-    
-    val targetname = "4"
+		val handedDataRootPath = args(0)
+		val femurAsmFile = args(1)
+		var variance_rot = args(2).toFloat
+		var variance_trans = args(3).toFloat
+		var pose_take_size = args(4).toInt
+		var shapeTakeSize = args(5).toInt
+		var shapeStDev = args(6).toFloat
+		useUI = args(7).toBoolean
+		var targetname = args(8)
 
-    // create a visualization window
-    if (useUI) {
-      ui = ScalismoUI()
-    }
+		//val targetname = "4"
 
-    // Read data
-    asm = ActiveShapeModelIO.readActiveShapeModel(new File(s"$handedDataRootPath/$femurAsmFile")).get
-    val image = ImageIO.read3DScalarImage[Short](new File(s"$handedDataRootPath/test/$targetname.nii")).get.map(_.toFloat)
+		// create a visualization window
+		if (useUI) {
+		  ui = ScalismoUI()
+		}
 
-    if (useUI) {
-      ui.show(asm.statisticalModel, "model_updating")
-      ui.show(image, "CT")
-      ui.show(MeshIO.readMesh(new File(s"$handedDataRootPath/test/$targetname.stl")).get, "test4")
-    }
+		// Read data
+		asm = ActiveShapeModelIO.readActiveShapeModel(new File(s"$handedDataRootPath/$femurAsmFile")).get
+		val image = ImageIO.read3DScalarImage[Short](new File(s"$handedDataRootPath/$targetname.nii")).get.map(_.toFloat)
 
-    calculate_CoM(asm)
+		if (useUI) {
+			ui.show(asm.statisticalModel, "model_updating")
+			ui.show(image, "CT")
+			if (targetname.split("/")(0) == "test"){
+				ui.show(MeshIO.readMesh(new File(s"$handedDataRootPath/$targetname.stl")).get, "reference femur mesh")
+			}
+		}
 
-    // PREPROCESSING
-    System.out.println("Preprocessing...")
-    val prepImg: PreprocessedImage = asm.preprocessor(image)
+		calculate_CoM(asm)
 
-
-    // START POSE FITTING
-    println("-------------Doing Pose fitting-------------------------")
-    var coeffs = ShapeParameters(DenseVector.zeros[Float](3), DenseVector.zeros[Float](3), asm.statisticalModel.coefficients(asm.statisticalModel.mean))
-
-    println("Running iteration pose fitting with variances rot/trans " + variance_rot + "/" + variance_trans + " and take_size " + pose_take_size)
-
-    coeffs = runPoseFittingOnlyTranslationAllAxis(fast = false, asm, prepImg, coeffs, variance_rot * 2, variance_trans * 2, 50, 0)
-    coeffs = runPoseFittingOnlyRotationAlongX(fast = false, asm, prepImg, coeffs, variance_rot, variance_trans, 50, 0)
-    coeffs = runPoseFittingOnlyTranslationAllAxis(fast = false, asm, prepImg, coeffs, variance_rot, variance_trans, 50, 0)
-    coeffs = runPoseFittingOnlyRotationAlongX(fast = false, asm, prepImg, coeffs, variance_rot / 4, variance_trans, 50, 0)
-
-    //coeffs = runPoseFitting(fast = false, asm, prepImg, coeffs, variance_rot, variance_trans, pose_take_size, 0)
-
-    println("-----------------------------Saving pose fitted ASM--------------------------------------")
-
-    // Creating the transformation according to the pose coefficients and rigid transforming the ASM
-    var curr_pose_coefs = center_of_mass + coeffs.translationParameters
-    current_CoM = new Point3D(curr_pose_coefs.valueAt(0), curr_pose_coefs.valueAt(1), curr_pose_coefs.valueAt(2))
-    rigidTransSpace = RigidTransformationSpace[_3D](current_CoM)
-    rigidtrans = rigidTransSpace.transformForParameters(DenseVector.vertcat(coeffs.translationParameters, coeffs.rotationParameters))
-    asm = asm.transform(rigidtrans)
-
-    ActiveShapeModelIO.writeActiveShapeModel(asm, new File(s"$handedDataRootPath/femur-asm_pose_fitted.h5"))
-
-    println("-----------------------------ASM saved--------------------------------------")
-    println("-----------------------------Pose Fitting done--------------------------------------")
-    // END POSE FITTING
+		// PREPROCESSING
+		System.out.println("Preprocessing...")
+		val prepImg: PreprocessedImage = asm.preprocessor(image)
 
 
-    // START SHAPE FITTING
-    println("-----------------------------Doing Shape fitting--------------------------------------")
+		// START POSE FITTING
+		println("-------------Doing Pose fitting-------------------------")
+		var coeffs = ShapeParameters(DenseVector.zeros[Float](3), DenseVector.zeros[Float](3), asm.statisticalModel.coefficients(asm.statisticalModel.mean))
 
-    // We work with the pose fitted ASM now, so reset the coefficients
-    if (load_fitted_asm) {
-      asm = ActiveShapeModelIO.readActiveShapeModel(new File(s"$handedDataRootPath/femur-asm_pose_fitted.h5")).get
-    }
+		println("Running iteration pose fitting with variances rot/trans " + variance_rot + "/" + variance_trans + " and take_size " + pose_take_size)
 
-    if (useUI) {
-      ui.remove("model_updating")
-      ui.show(asm.statisticalModel, "model_updating")
-    }
+		coeffs = runPoseFittingOnlyTranslationAllAxis(fast = false, asm, prepImg, coeffs, variance_rot * 2, variance_trans * 2, pose_take_size/2, 0)
+		//coeffs = runPoseFittingOnlyRotationAlongX(fast = false, asm, prepImg, coeffs, variance_rot, variance_trans, 250, 0)
+		coeffs = runPoseFittingOnlyTranslationAllAxis(fast = false, asm, prepImg, coeffs, variance_rot, variance_trans, pose_take_size/2, 0)
+		//coeffs = runPoseFittingOnlyRotationAlongX(fast = false, asm, prepImg, coeffs, variance_rot / 4, variance_trans, 250, 0)
 
-    coeffs = ShapeParameters(DenseVector.zeros[Float](3), DenseVector.zeros[Float](3), asm.statisticalModel.coefficients(asm.statisticalModel.mean))
+		//coeffs = runPoseFitting(fast = false, asm, prepImg, coeffs, variance_rot, variance_trans, pose_take_size, 0)
 
-    // Not doing outer iteration right now. I suspect that it's actually counterproductive (time would be better spent on fine-detail fitting).
-    coeffs = runShapeFitting(asm, prepImg, coeffs, shapeStDev, shapeTakeSize)
-    coeffs = runPoseFitting(fast = false, asm, prepImg, coeffs, variance_rot, variance_trans, pose_take_size, 0)
+		println("-----------------------------Saving pose fitted ASM--------------------------------------")
 
-    println("-----------------Shape Fitting done--------------------------")
+		// Creating the transformation according to the pose coefficients and rigid transforming the ASM
+		var curr_pose_coefs = center_of_mass + coeffs.translationParameters
+		current_CoM = new Point3D(curr_pose_coefs.valueAt(0), curr_pose_coefs.valueAt(1), curr_pose_coefs.valueAt(2))
+		rigidTransSpace = RigidTransformationSpace[_3D](current_CoM)
+		rigidtrans = rigidTransSpace.transformForParameters(DenseVector.vertcat(coeffs.translationParameters, coeffs.rotationParameters))
+		asm = asm.transform(rigidtrans)
 
-    // Saving coefficient vectors and resulting mesh.
-    val result = coeffs.rotationParameters.toString() + "\n" + coeffs.translationParameters.toString() + "\n" + coeffs.modelCoefficients.toString()
-    Files.write(Paths.get(s"test_coeffs_for_$targetname.txt"), result.getBytes(StandardCharsets.UTF_8))
+		ActiveShapeModelIO.writeActiveShapeModel(asm, new File(s"$handedDataRootPath/femur-asm_pose_fitted.h5"))
 
-    var final_mesh = asm.statisticalModel.instance(coeffs.modelCoefficients)
+		println("-----------------------------ASM saved--------------------------------------")
+		println("-----------------------------Pose Fitting done--------------------------------------")
+		// END POSE FITTING
 
-    // This time we need to transform using the CoM of the NEW asm, i.e. of the pose_fitted_asm
-    calculate_CoM(asm)
 
-    // Figure out transform based on coeffs from the shape fitting phase. They should be all 0 right now, but if we ever introduce pose fitting stuff
-    // into the shape fitting phase, this here will come in handy.
-    var current_translation_coeffs = center_of_mass + coeffs.translationParameters
-    current_CoM = new Point3D(current_translation_coeffs.valueAt(0), current_translation_coeffs.valueAt(1), current_translation_coeffs.valueAt(2))
-    rigidTransSpace = RigidTransformationSpace[_3D](current_CoM)
-    rigidtrans = rigidTransSpace.transformForParameters(DenseVector.vertcat(coeffs.translationParameters, coeffs.rotationParameters))
+		// START SHAPE FITTING
+		println("-----------------------------Doing Shape fitting--------------------------------------")
 
-    final_mesh = final_mesh.transform(rigidtrans)
-    MeshIO.writeMesh(final_mesh, new File(s"$handedDataRootPath/final_mesh.stl"))
+		// We work with the pose fitted ASM now, so reset the coefficients
+		if (load_fitted_asm) {
+		  asm = ActiveShapeModelIO.readActiveShapeModel(new File(s"$handedDataRootPath/femur-asm_pose_fitted.h5")).get
+		}
 
-    println("-----------------Finished writing results--------------------------")
-  }
+		if (useUI) {
+		  ui.remove("model_updating")
+		  ui.show(asm.statisticalModel, "model_updating")
+		}
+
+		coeffs = ShapeParameters(DenseVector.zeros[Float](3), DenseVector.zeros[Float](3), asm.statisticalModel.coefficients(asm.statisticalModel.mean))
+		for (i <- 1 to 10) {
+		  coeffs = runShapeFitting(asm, prepImg, coeffs, shapeStDev/i, shapeTakeSize)
+		  coeffs = runPoseFitting(fast = false, asm, prepImg, coeffs, variance_rot/(10*i), variance_trans/i, pose_take_size/5, 0)
+		}
+
+
+		println("-----------------Shape Fitting done--------------------------")
+
+		// Saving coefficient vectors and resulting mesh.
+		val result = coeffs.rotationParameters.toString() + "\n" + coeffs.translationParameters.toString() + "\n" + coeffs.modelCoefficients.toString()
+		targetname = targetname.split("/")(1)
+		Files.write(Paths.get(s"test_coeffs_for_$targetname.txt"), result.getBytes(StandardCharsets.UTF_8))
+
+		var final_mesh = asm.statisticalModel.instance(coeffs.modelCoefficients)
+
+		// This time we need to transform using the CoM of the NEW asm, i.e. of the pose_fitted_asm
+		calculate_CoM(asm)
+
+		// Figure out transform based on coeffs from the shape fitting phase. They should be all 0 right now, but if we ever introduce pose fitting stuff
+		// into the shape fitting phase, this here will come in handy.
+		var current_translation_coeffs = center_of_mass + coeffs.translationParameters
+		current_CoM = new Point3D(current_translation_coeffs.valueAt(0), current_translation_coeffs.valueAt(1), current_translation_coeffs.valueAt(2))
+		rigidTransSpace = RigidTransformationSpace[_3D](current_CoM)
+		rigidtrans = rigidTransSpace.transformForParameters(DenseVector.vertcat(coeffs.translationParameters, coeffs.rotationParameters))
+
+		final_mesh = final_mesh.transform(rigidtrans)
+		MeshIO.writeMesh(final_mesh, new File(s"$handedDataRootPath/final_mesh.stl"))
+
+		println("-----------------Finished writing results--------------------------")
+	}
 
 
   // Sets center_of_mass for the given ASM. The idea is that center_of_mass always contains the CoM of the currently used
@@ -205,7 +211,7 @@ object Segmentation {
       posteriorEvaluator = IntensityBasedLikelyhoodEvaluators.IntensityBasedLikeliHoodEvaluatorForRigidFitting(asm, prepImg)
     }
 
-    val positionGenerator = MixtureProposal.fromProposalsWithTransition((0.8, RotationUpdateProposalX(variance_trans)), (0.2, RotationUpdateProposalX(variance_trans * 2)))(rnd = new Random())
+    val positionGenerator = MixtureProposal.fromProposalsWithTransition((0.8, RotationUpdateProposalX(variance_rot)), (0.2, RotationUpdateProposalX(variance_rot * 2)))(rnd = new Random())
 
     val chain = MetropolisHastings(positionGenerator, posteriorEvaluator, logger)(new Random())
     val mhIt = chain.iterator(initialParameters)
