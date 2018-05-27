@@ -46,7 +46,7 @@ object Segmentation {
     var rigidtrans: RigidTransformation[_3D] = null
 
     if (args.length != 11) {
-      println("args should be of form: <handedData_path><femur_asm_file><variance_rot><variance_trans><pose_take_size><shape_take_size><shape_variance><use_ui(true/false)><path_to_target><variance_scaling_factor>")
+      println("args should be of form: <handedData_path><femur_asm_file><variance_rot><variance_trans><pose_take_size><shape_take_size><shape_variance><use_ui(true/false)><path_to_target><variance_scaling_factor><plot_graph>")
       println("Remember, path to target needs to be preceded by either targets/ or test/. Variance scaling factor is used to change variance decrement during shape fitting")
       System.exit(0)
     }
@@ -107,11 +107,18 @@ object Segmentation {
     System.out.println("Preprocessing...")
     val prepImg: PreprocessedImage = asm.preprocessor(image)
 
-
     // START POSE FITTING
     println("-------------Doing Pose fitting-------------------------")
     var coeffs = ShapeParameters(DenseVector.zeros[Float](3), DenseVector.zeros[Float](3), asm.statisticalModel.coefficients(asm.statisticalModel.mean))
+    //coeffs = runPoseFitting(fast = true, asm, prepImg, coeffs, variance_rot, variance_trans, pose_take_size*10, 0)
 
+    //Loopy pose:
+    /*for (i <- 1 to 10) {
+      coeffs = runPoseFitting(fast = false, asm, prepImg, coeffs, variance_rot/i, variance_trans/i, pose_take_size/5, 0)
+    }*/
+
+    //Normal pose:
+    coeffs = runPoseFitting(fast = false, asm, prepImg, coeffs, variance_rot, variance_trans, pose_take_size * 2, 0)
 
     println("Running pose fitting with variances rot/trans " + variance_rot + "/" + variance_trans + " and take_size " + pose_take_size)
 
@@ -137,7 +144,6 @@ object Segmentation {
     println("-----------------------------Pose Fitting done--------------------------------------")
     // END POSE FITTING
 
-
     // START SHAPE FITTING
     println("-----------------------------Doing Shape fitting--------------------------------------")
 
@@ -145,6 +151,22 @@ object Segmentation {
     //		if (load_fitted_asm) {
     //		  asm = ActiveShapeModelIO.readActiveShapeModel(new File(s"$handedDataRootPath/femur-asm_pose_fitted.h5")).get
     //		}
+    // For single version, set i<-1 to 1 and give large enough take_size as program arguments.
+    for (i <- 1 to 10) {
+      var rotSt = (variance_rot.toDouble / (10 * i * decayParam.toDouble)).toFloat
+      var transSt = (variance_trans.toDouble / (10 * i * decayParam.toDouble)).toFloat
+      val variance = (shapeStDev.toDouble / (i * decayParam.toDouble)).toFloat
+      println(s"stDevRot: $rotSt, stDevTrans: $transSt")
+      coeffs = runShapeFitting(asm, prepImg, coeffs, variance, shapeTakeSize)
+      coeffs = runPoseFitting(fast = false, asm, prepImg, coeffs, rotSt, transSt, pose_take_size / 10, 0)
+
+      /*var curr_pose_coefs = center_of_mass + coeffs.translationParameters
+      current_CoM = new Point3D(curr_pose_coefs.valueAt(0), curr_pose_coefs.valueAt(1), curr_pose_coefs.valueAt(2))
+      rigidTransSpace = RigidTransformationSpace[_3D](current_CoM)
+      rigidtrans = rigidTransSpace.transformForParameters(DenseVector.vertcat(coeffs.translationParameters, coeffs.rotationParameters))
+      asm = asm.transform(rigidtrans)
+      coeffs = ShapeParameters(DenseVector.zeros(3), DenseVector.zeros(3), coeffs.modelCoefficients)*/
+    }
 
     if (useUI) {
       ui.remove("model_updating")
@@ -153,35 +175,15 @@ object Segmentation {
 
     coeffs = ShapeParameters(DenseVector.zeros[Float](3), DenseVector.zeros[Float](3), asm.statisticalModel.coefficients(asm.statisticalModel.mean))
 
-    for (i <- 1 to 10) {
-      var rotSt = (variance_rot.toDouble / (10 * i * decayParam.toDouble)).toFloat
-      var transSt = (variance_trans.toDouble / (i * decayParam.toDouble)).toFloat
-      val variance = (shapeStDev.toDouble / (i * decayParam.toDouble)).toFloat
-      println(s"stDevRot: $rotSt, stDevTrans: $transSt")
-      coeffs = runShapeFitting(asm, prepImg, coeffs, variance, shapeTakeSize)
-//      coeffs = runPoseFitting(fast = false, asm, prepImg, coeffs, rotSt, transSt, pose_take_size, 0)
-
-      var curr_pose_coefs = center_of_mass + coeffs.translationParameters
-      current_CoM = new Point3D(curr_pose_coefs.valueAt(0), curr_pose_coefs.valueAt(1), curr_pose_coefs.valueAt(2))
-      rigidTransSpace = RigidTransformationSpace[_3D](current_CoM)
-      rigidtrans = rigidTransSpace.transformForParameters(DenseVector.vertcat(coeffs.translationParameters, coeffs.rotationParameters))
-      asm = asm.transform(rigidtrans)
-      coeffs = ShapeParameters(DenseVector.zeros(3), DenseVector.zeros(3), coeffs.modelCoefficients)
-    }
-
-
     println("-----------------Shape Fitting done--------------------------")
-
     // Saving coefficient vectors and resulting mesh.
-    val result = coeffs.rotationParameters.toString() + "\n" + coeffs.translationParameters.toString() + "\n" + coeffs.modelCoefficients.toString()
+    var result = coeffs.rotationParameters.toString() + "\n" + coeffs.translationParameters.toString() + "\n" + coeffs.modelCoefficients.toString() + "\n"
     targetname = targetname.split("/")(1)
-    Files.write(Paths.get(s"test_coeffs_for_$targetname.txt"), result.getBytes(StandardCharsets.UTF_8))
-    for (i <- 0 to args.length - 1) {
-      var res = args(i).toString
-      res += " "
-      Files.write(Paths.get(s"test_coeffs_for_$targetname.txt"), res.getBytes(StandardCharsets.UTF_8))
-    }
+    for (i <- 0 to args.length-1) {
+      result += args(i).toString + " "
 
+    }
+    Files.write(Paths.get(s"test_coeffs_for_$targetname.txt"), result.getBytes(StandardCharsets.UTF_8))
     var final_mesh = asm.statisticalModel.instance(coeffs.modelCoefficients)
 
     // This time we need to transform using the CoM of the NEW asm, i.e. of the pose_fitted_asm
