@@ -46,7 +46,7 @@ object Segmentation {
 		var rigidTransSpace: RigidTransformationSpace[_3D] = null
 		var rigidtrans: RigidTransformation[_3D] = null
 
-		if (args.length != 10) {
+		if (args.length != 11) {
 			println("args should be of form: <handedData_path><femur_asm_file><variance_rot><variance_trans><pose_take_size><shape_take_size><shape_variance><use_ui(true/false)><path_to_target><variance_scaling_factor>")
 			println("Remember, path to target needs to be preceded by either targets/ or test/. Variance scaling factor is used to change variance decrement during shape fitting")
 			System.exit(0)
@@ -111,7 +111,7 @@ object Segmentation {
 		//coeffs = runPoseFittingOnlyTranslationAllAxis(fast = false, asm, prepImg, coeffs, variance_rot, variance_trans, pose_take_size/2, 0)
 		//coeffs = runPoseFittingOnlyRotationAlongX(fast = false, asm, prepImg, coeffs, variance_rot / 4, variance_trans, 250, 0)
 
-		coeffs = runPoseFitting(fast = true, asm, prepImg, coeffs, variance_rot, variance_trans, pose_take_size*10, 0)
+		coeffs = runPoseFitting(fast = true, asm, prepImg, coeffs, variance_rot, variance_trans, pose_take_size*2, 0)
 		coeffs = runPoseFitting(fast = false, asm, prepImg, coeffs, variance_rot, variance_trans, pose_take_size, 0)
 
 		println("-----------------------------Saving pose fitted ASM--------------------------------------")
