@@ -162,7 +162,7 @@ object Segmentation {
 		val result = coeffs.rotationParameters.toString() + "\n" + coeffs.translationParameters.toString() + "\n" + coeffs.modelCoefficients.toString()
 		targetname = targetname.split("/")(1)
 		Files.write(Paths.get(s"test_coeffs_for_$targetname.txt"), result.getBytes(StandardCharsets.UTF_8))
-		for (i <- 0 to args.length) {
+		for (i <- 0 to args.length-1) {
 			var res = args(i).toString
 			res += " "
 			Files.write(Paths.get(s"test_coeffs_for_$targetname.txt"), res.getBytes(StandardCharsets.UTF_8))
