@@ -33,10 +33,10 @@ object Segmentation {
   var useUI: Boolean = false
 
   var asm: ActiveShapeModel = _
-  var load_fitted_asm: Boolean = true
+  var load_fitted_asm: Boolean = false
   private[this] var ui: ScalismoUI = _
 
-  var plotter = new HastingsPlotter(frequency = 1)
+  //var plotter = new HastingsPlotter(frequency = 1)
   var allIts = 0
 	val time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS")
 
@@ -105,6 +105,7 @@ object Segmentation {
 		//coeffs = runPoseFittingOnlyTranslationAllAxis(fast = false, asm, prepImg, coeffs, variance_rot, variance_trans, pose_take_size/2, 0)
 		//coeffs = runPoseFittingOnlyRotationAlongX(fast = false, asm, prepImg, coeffs, variance_rot / 4, variance_trans, 250, 0)
 
+		coeffs = runPoseFitting(fast = true, asm, prepImg, coeffs, variance_rot, variance_trans, pose_take_size*10, 0)
 		coeffs = runPoseFitting(fast = false, asm, prepImg, coeffs, variance_rot, variance_trans, pose_take_size, 0)
 
 		println("-----------------------------Saving pose fitted ASM--------------------------------------")
@@ -141,8 +142,9 @@ object Segmentation {
 		for (i <- 1 to 10) {
       		var rotSt = (variance_rot.toDouble/(10*i*decayParam.toDouble)).toFloat
       		var transSt = (variance_trans.toDouble/(i*decayParam.toDouble)).toFloat
+			val variance = (shapeStDev.toDouble/(i*decayParam.toDouble)).toFloat
       		println(s"stDevRot: $rotSt, stDevTrans: $transSt")
-			coeffs = runShapeFitting(asm, prepImg, coeffs, shapeStDev, shapeTakeSize)
+			coeffs = runShapeFitting(asm, prepImg, coeffs, variance, shapeTakeSize)
 			coeffs = runPoseFitting(fast = false, asm, prepImg, coeffs, rotSt, transSt, pose_take_size, 0)
 
 			var curr_pose_coefs = center_of_mass + coeffs.translationParameters
@@ -160,7 +162,7 @@ object Segmentation {
 		val result = coeffs.rotationParameters.toString() + "\n" + coeffs.translationParameters.toString() + "\n" + coeffs.modelCoefficients.toString()
 		targetname = targetname.split("/")(1)
 		Files.write(Paths.get(s"test_coeffs_for_$targetname.txt"), result.getBytes(StandardCharsets.UTF_8))
-		for (i <- args.length) {
+		for (i <- 0 to args.length) {
 			var res = args(i).toString
 			res += " "
 			Files.write(Paths.get(s"test_coeffs_for_$targetname.txt"), res.getBytes(StandardCharsets.UTF_8))
@@ -334,7 +336,7 @@ object Segmentation {
       private var all = 0f
 
       override def accept(current: ShapeParameters, sample: ShapeParameters, generator: ProposalGenerator[ShapeParameters], evaluator: DistributionEvaluator[ShapeParameters]): Unit = {
-        plotter.offer(allIts.toDouble, evaluator.logValue(sample))
+        //plotter.offer(allIts.toDouble, evaluator.logValue(sample))
 
         accepted += 1
         all += 1
@@ -375,18 +377,18 @@ object Segmentation {
     // and not just when the last prob was larger (i.e. a proposal may be accepted and show up here even if its prob is lower)
     val samplingIterator = for (theta <- mhIt) yield {
 
-      if (useUI) {
-        val current_translation_coeffs = center_of_mass + theta.translationParameters
-        val current_CoM: Point3D = new Point3D(current_translation_coeffs.valueAt(0), current_translation_coeffs.valueAt(1), current_translation_coeffs.valueAt(2))
+		if (useUI) {
+			val current_translation_coeffs = center_of_mass + theta.translationParameters
+			val current_CoM: Point3D = new Point3D(current_translation_coeffs.valueAt(0), current_translation_coeffs.valueAt(1), current_translation_coeffs.valueAt(2))
 
-        val rigidTransSpace = RigidTransformationSpace[_3D](current_CoM)
-        val rigidtrans = rigidTransSpace.transformForParameters(DenseVector.vertcat(theta.translationParameters, theta.rotationParameters))
+			val rigidTransSpace = RigidTransformationSpace[_3D](current_CoM)
+			val rigidtrans = rigidTransSpace.transformForParameters(DenseVector.vertcat(theta.translationParameters, theta.rotationParameters))
 
-        val smInstance = ui.frame.scene.find[ShapeModelView](si => si.name == "model_updating").head.instances.head
-        smInstance.rigidTransformation = Some(rigidtrans)
-      }
+			val smInstance = ui.frame.scene.find[ShapeModelView](si => si.name == "model_updating").head.instances.head
+			smInstance.rigidTransformation = Some(rigidtrans)
+      	}
 
-      theta
+      	theta
     }
 
     val samples = samplingIterator.drop(takeSize / 10).take(takeSize).toIndexedSeq
@@ -399,7 +401,7 @@ object Segmentation {
       private var all = 0f
 
       override def accept(current: ShapeParameters, sample: ShapeParameters, generator: ProposalGenerator[ShapeParameters], evaluator: DistributionEvaluator[ShapeParameters]): Unit = {
-        plotter.offer(allIts.toDouble, evaluator.logValue(sample))
+        //plotter.offer(allIts.toDouble, evaluator.logValue(sample))
 
         accepted += 1
         all += 1
