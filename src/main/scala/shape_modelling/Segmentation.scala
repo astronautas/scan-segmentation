@@ -36,7 +36,8 @@ object Segmentation {
   var load_fitted_asm: Boolean = false
   private[this] var ui: ScalismoUI = _
 
-  //var plotter = new HastingsPlotter(frequency = 1)
+  var plotter : HastingsPlotter = _
+  var graph : Boolean = false
   var allIts = 0
 	val time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS")
 
@@ -45,7 +46,7 @@ object Segmentation {
 		var rigidTransSpace: RigidTransformationSpace[_3D] = null
 		var rigidtrans: RigidTransformation[_3D] = null
 
-		if (args.length != 10) {
+		if (args.length != 11) {
 			println("args should be of form: <handedData_path><femur_asm_file><variance_rot><variance_trans><pose_take_size><shape_take_size><shape_variance><use_ui(true/false)><path_to_target><variance_scaling_factor>")
 			println("Remember, path to target needs to be preceded by either targets/ or test/. Variance scaling factor is used to change variance decrement during shape fitting")
 			System.exit(0)
@@ -65,9 +66,14 @@ object Segmentation {
 		var shapeStDev = args(6).toFloat
 		useUI = args(7).toBoolean
 		var targetname = args(8)
-    	var decayParam = args(9).toFloat
+    var decayParam = args(9).toFloat
+    graph = args(10).toBoolean
 
 		//val targetname = "4"
+
+    if (graph) {
+      plotter = new HastingsPlotter(frequency = 1)
+    }
 
 		// create a visualization window
 		if (useUI) {
@@ -342,7 +348,10 @@ object Segmentation {
       private var all = 0f
 
       override def accept(current: ShapeParameters, sample: ShapeParameters, generator: ProposalGenerator[ShapeParameters], evaluator: DistributionEvaluator[ShapeParameters]): Unit = {
-        //plotter.offer(allIts.toDouble, evaluator.logValue(sample))
+
+        if (graph) {
+          plotter.offer(allIts.toDouble, evaluator.logValue(sample))
+        }
 
         accepted += 1
         all += 1
@@ -407,7 +416,9 @@ object Segmentation {
       private var all = 0f
 
       override def accept(current: ShapeParameters, sample: ShapeParameters, generator: ProposalGenerator[ShapeParameters], evaluator: DistributionEvaluator[ShapeParameters]): Unit = {
-        //plotter.offer(allIts.toDouble, evaluator.logValue(sample))
+        if (graph) {
+          plotter.offer(allIts.toDouble, evaluator.logValue(sample))
+        }
 
         accepted += 1
         all += 1
