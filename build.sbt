@@ -11,16 +11,17 @@ resolvers += Resolver.bintrayRepo("unibas-gravis", "maven")
 
 resolvers += Opts.resolver.sonatypeSnapshots
 
+
 resolvers ++= Seq(
   "scalismo" at "http://shapemodelling.cs.unibas.ch/repository/public"
 )
 
-libraryDependencies  ++= {
-  Seq(
-    "ch.unibas.cs.gravis" % "scalismo-ui_2.11" % "0.6.+",
-    "ch.unibas.cs.gravis" % "scalismo-sampling_2.11" % "develop-SNAPSHOT"
-  )
-}
+libraryDependencies  ++= Seq(
+  "ch.unibas.cs.gravis" % "scalismo-ui_2.11" % "0.6.+",
+  "ch.unibas.cs.gravis" % "scalismo-sampling_2.11" % "develop-SNAPSHOT"
+)
+
+libraryDependencies += "com.github.wookietreiber" %% "scala-chart" % "latest.integration"
 
 assemblyJarName in assembly := "executable.jar"
 
