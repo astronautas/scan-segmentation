@@ -8,7 +8,7 @@ import java.text.SimpleDateFormat
 import breeze.linalg.DenseVector
 import scalismo.common.PointId
 import scalismo.geometry
-import scalismo.geometry.{Landmark, Point3D, Vector3D, _3D}
+import scalismo.geometry._
 import scalismo.io.{ActiveShapeModelIO, ImageIO, LandmarkIO, MeshIO}
 import scalismo.registration.{RigidTransformation, RigidTransformationSpace}
 import scalismo.sampling.algorithms.MetropolisHastings
@@ -22,6 +22,7 @@ import scalismo.ui.api.SimpleAPI.ScalismoUI
 import shape_modelling.IntensityBasedLikelyhoodEvaluators.IntensityBasedLikeliHoodEvaluatorForRigidFittingFast
 import shape_modelling.MCMC._
 
+import scala.collection.mutable.ListBuffer
 import scala.util.Random
 
 object Segmentation {
@@ -95,11 +96,15 @@ object Segmentation {
       }
     }
 
-    ui.addLandmarksTo(asm_lms, "model_updating")
-    ui.addLandmarksTo(target_lms, "CT")
-    asm_lms = ui.getLandmarksOf("model_updating").get
-    target_lms = ui.getLandmarksOf("CT").get
+    if (useUI) {
+      ui.addLandmarksTo(asm_lms, "model_updating")
+      ui.addLandmarksTo(target_lms, "CT")
+    }
 
+    if (useUI) {
+      asm_lms = ui.getLandmarksOf("model_updating").get
+      target_lms = ui.getLandmarksOf("CT").get
+    }
 
     calculate_CoM(asm)
 
@@ -111,32 +116,18 @@ object Segmentation {
     println("-------------Doing Pose fitting-------------------------")
     var coeffs = ShapeParameters(DenseVector.zeros[Float](3), DenseVector.zeros[Float](3), asm.statisticalModel.coefficients(asm.statisticalModel.mean))
     //coeffs = runPoseFitting(fast = true, asm, prepImg, coeffs, variance_rot, variance_trans, pose_take_size*10, 0)
-
-    //Loopy pose:
-    /*for (i <- 1 to 10) {
-      coeffs = runPoseFitting(fast = false, asm, prepImg, coeffs, variance_rot/i, variance_trans/i, pose_take_size/5, 0)
-    }*/
-
-    //Normal pose:
-    coeffs = runPoseFitting(fast = false, asm, prepImg, coeffs, variance_rot, variance_trans, pose_take_size * 2, 0)
-
+    
     println("Running pose fitting with variances rot/trans " + variance_rot + "/" + variance_trans + " and take_size " + pose_take_size)
 
-    //coeffs = runPoseFittingOnlyTranslationAllAxis(fast = false, asm, prepImg, coeffs, variance_rot * 2, variance_trans * 2, pose_take_size/2, 0)
-    //coeffs = runPoseFittingOnlyRotationAlongX(fast = false, asm, prepImg, coeffs, variance_rot, variance_trans, 250, 0)
-    //coeffs = runPoseFittingOnlyTranslationAllAxis(fast = false, asm, prepImg, coeffs, variance_rot, variance_trans, pose_take_size/2, 0)
-    //coeffs = runPoseFittingOnlyRotationAlongX(fast = false, asm, prepImg, coeffs, variance_rot / 4, variance_trans, 250, 0)
-
     coeffs = runPoseFitting(fast = true, asm, prepImg, coeffs, variance_rot, variance_trans, pose_take_size, 0)
+    val transformationResult = transformModel(center_of_mass, coeffs, asm_lms)
+    coeffs = transformationResult._1
+
+    if (transformationResult._2 != null) {
+      asm_lms = transformationResult._2
+    }
 
     println("-----------------------------Saving pose fitted ASM--------------------------------------")
-
-    // Creating the transformation according to the pose coefficients and rigid transforming the ASM
-    var curr_pose_coefs = center_of_mass + coeffs.translationParameters
-    current_CoM = new Point3D(curr_pose_coefs.valueAt(0), curr_pose_coefs.valueAt(1), curr_pose_coefs.valueAt(2))
-    rigidTransSpace = RigidTransformationSpace[_3D](current_CoM)
-    rigidtrans = rigidTransSpace.transformForParameters(DenseVector.vertcat(coeffs.translationParameters, coeffs.rotationParameters))
-    asm = asm.transform(rigidtrans)
 
     ActiveShapeModelIO.writeActiveShapeModel(asm, new File(s"$handedDataRootPath/femur-asm_pose_fitted.h5"))
 
@@ -157,15 +148,16 @@ object Segmentation {
       var transSt = (variance_trans.toDouble / (10 * i * decayParam.toDouble)).toFloat
       val variance = (shapeStDev.toDouble / (i * decayParam.toDouble)).toFloat
       println(s"stDevRot: $rotSt, stDevTrans: $transSt")
-      coeffs = runShapeFitting(asm, prepImg, coeffs, variance, shapeTakeSize)
-      coeffs = runPoseFitting(fast = false, asm, prepImg, coeffs, rotSt, transSt, pose_take_size / 10, 0)
 
-      /*var curr_pose_coefs = center_of_mass + coeffs.translationParameters
+      coeffs = runShapeFitting(asm, prepImg, coeffs, variance, shapeTakeSize)
+      coeffs = runPoseFitting(fast = false, asm, prepImg, coeffs, rotSt, transSt, pose_take_size / 5, 0)
+
+      var curr_pose_coefs = center_of_mass + coeffs.translationParameters
       current_CoM = new Point3D(curr_pose_coefs.valueAt(0), curr_pose_coefs.valueAt(1), curr_pose_coefs.valueAt(2))
       rigidTransSpace = RigidTransformationSpace[_3D](current_CoM)
       rigidtrans = rigidTransSpace.transformForParameters(DenseVector.vertcat(coeffs.translationParameters, coeffs.rotationParameters))
       asm = asm.transform(rigidtrans)
-      coeffs = ShapeParameters(DenseVector.zeros(3), DenseVector.zeros(3), coeffs.modelCoefficients)*/
+      coeffs = ShapeParameters(DenseVector.zeros(3), DenseVector.zeros(3), coeffs.modelCoefficients)
     }
 
     if (useUI) {
@@ -179,7 +171,7 @@ object Segmentation {
     // Saving coefficient vectors and resulting mesh.
     var result = coeffs.rotationParameters.toString() + "\n" + coeffs.translationParameters.toString() + "\n" + coeffs.modelCoefficients.toString() + "\n"
     targetname = targetname.split("/")(1)
-    for (i <- 0 to args.length-1) {
+    for (i <- 0 to args.length - 1) {
       result += args(i).toString + " "
 
     }
@@ -552,5 +544,26 @@ object Segmentation {
     val samples = samplingIterator.take(2000).toIndexedSeq
 
     samples.maxBy(posteriorEvaluator.logValue)
+  }
+
+  def transformModel(center_of_mass: DenseVector[Float], coeffs: ShapeParameters, landmarks: Seq[Landmark[_3D]] = null): (ShapeParameters, Seq[Landmark[_3D]]) = {
+    var curr_pose_coefs = center_of_mass + coeffs.translationParameters
+    var current_CoM = new Point3D(curr_pose_coefs.valueAt(0), curr_pose_coefs.valueAt(1), curr_pose_coefs.valueAt(2))
+    var rigidTransSpace = RigidTransformationSpace[_3D](current_CoM)
+    var rigidtrans = rigidTransSpace.transformForParameters(DenseVector.vertcat(coeffs.translationParameters, coeffs.rotationParameters))
+
+    asm = asm.transform(rigidtrans)
+
+    val newLms: ListBuffer[Landmark[_3D]] = ListBuffer()
+
+    if (landmarks != null) {
+      landmarks.zipWithIndex foreach { case (landmark, i) =>
+        val point = rigidtrans.f(landmark.point)
+        val lm = Landmark(landmark.id, point = point)
+        newLms += lm
+      }
+    }
+
+    return (ShapeParameters(DenseVector.zeros(3), DenseVector.zeros(3), coeffs.modelCoefficients), newLms)
   }
 }
