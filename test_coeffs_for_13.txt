@@ -1,0 +1,4 @@
+DenseVector(0.0, 0.0, 0.0)
+DenseVector(0.0, 0.0, 0.0)
+DenseVector(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+handedDataNonAligned femur-asm.h5 0.05f 0.02f 20 20 0.0028f true targets/13 0.5 true 
