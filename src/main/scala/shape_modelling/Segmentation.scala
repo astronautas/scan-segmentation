@@ -139,7 +139,11 @@ object Segmentation {
       println(s"stDevRot: $rotSt, stDevTrans: $transSt")
 
       coeffs = runShapeFitting(asm, prepImg, coeffs, variance, shapeTakeSize)
-      transformModelOnUI(coeffs)
+      
+      if (useUI) {
+        transformModelOnUI(coeffs)
+      }
+
       coeffs = runPoseFitting(use_landmarks = false, asm, prepImg, coeffs, rotSt, transSt, pose_take_size, 0)
 
       //Between pose fitting and shape fitting, we need to apply the transform coefficients. LMs are ignored at this point
