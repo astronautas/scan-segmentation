@@ -109,7 +109,7 @@ object Segmentation {
     println("Running pose fitting with variances rot/trans " + variance_rot + "/" + variance_trans + " and take_size " + pose_take_size)
 
     // Run initial pose fitting using landmark evaluator.
-    coeffs = runPoseFitting(use_landmarks = true, asm, prepImg, coeffs, variance_rot, variance_trans, pose_take_size*2, 0)
+    coeffs = runPoseFitting(use_landmarks = true, asm, prepImg, coeffs, variance_rot, variance_trans, pose_take_size*3, 0)
 	  //TODO: put normal pose fitting step here as well
 
 
@@ -137,18 +137,21 @@ object Segmentation {
     //  asm = ActiveShapeModelIO.readActiveShapeModel(new File(s"$handedDataRootPath/femur-asm_pose_fitted.h5")).get
     //}
     // For single version, set i<-1 to 1 and give large enough take_size as program arguments.
-    for (i <- 1 to 10) {
+    for (i <- 1 to 3) {
 		var rotSt = (variance_rot.toDouble / (10 * i * decayParam.toDouble)).toFloat
 		var transSt = (variance_trans.toDouble / (10 * i * decayParam.toDouble)).toFloat
-		val variance = (shapeStDev.toDouble / (i * decayParam.toDouble)).toFloat
+		val variance = (shapeStDev.toDouble / (i*i * decayParam.toDouble)).toFloat
 		println(s"stDevRot: $rotSt, stDevTrans: $transSt")
 
 		coeffs = runShapeFitting(asm, prepImg, coeffs, variance, shapeTakeSize)
-		coeffs = runPoseFitting(use_landmarks = false, asm, prepImg, coeffs, rotSt, transSt, pose_take_size / 2, 0)
+		coeffs = runPoseFitting(use_landmarks = false, asm, prepImg, coeffs, rotSt, transSt, pose_take_size, 0)
 
 		//Between pose fitting and shape fitting, we need to apply the transform coefficients. LMs are ignored at this point
 		// (they're only used for the initial fitting, as they're not very accurate)
+
+        if (useUI) ui.remove("model_updating")
 		coeffs = transformModel(coeffs)._1
+		if (useUI) ui.show(asm.statisticalModel, "model_updating")
     }
 
     if (useUI) {
@@ -251,7 +254,7 @@ object Segmentation {
       posteriorEvaluator = Evaluators.Pose_aware_evaluator(asm, prepImg)
     }
 
-    val positionGenerator = MixtureProposal.fromProposalsWithTransition((0.1, RotationUpdateProposal(variance_rot)), (0.4, RotationUpdateProposal(variance_rot)), (0.4, TranslationUpdateProposal(variance_trans)), (0.1, TranslationUpdateProposal(variance_trans * 4)))(rnd = new Random())
+    val positionGenerator = MixtureProposal.fromProposalsWithTransition((0.1, RotationUpdateProposal(variance_rot*10)), (0.4, RotationUpdateProposal(variance_rot)), (0.4, TranslationUpdateProposal(variance_trans)), (0.1, TranslationUpdateProposal(variance_trans * 5)))(rnd = new Random())
 
     val chain = MetropolisHastings(positionGenerator, posteriorEvaluator, logger)(new Random())
     val mhIt = chain.iterator(initialParameters)
@@ -275,7 +278,12 @@ object Segmentation {
     }
 
     val samples = samplingIterator.drop(takeSize / 10).take(takeSize).toIndexedSeq
-    samples.maxBy(posteriorEvaluator.logValue)
+	val max = samples.maxBy(posteriorEvaluator.logValue)
+	val maxVal = posteriorEvaluator.logValue(max)
+
+	println(s"MAX theta: $maxVal")
+	best_prob_ever = maxVal
+	max
   }
 
   def runShapeFitting(asm: ActiveShapeModel, prepImg: PreprocessedImage, initialParameters: ShapeParameters, variance: Float, takeSize: Int): ShapeParameters = {
@@ -317,11 +325,11 @@ object Segmentation {
 
     val samplingIterator = for (theta <- mhIt) yield {
 
-      if (useUI) {
-        ui.setCoefficientsOf("model_updating", theta.modelCoefficients)
-      }
+		if (useUI) {
+			ui.setCoefficientsOf("model_updating", theta.modelCoefficients)
+		}
 
-      theta
+		theta
     }
 
     val samples = samplingIterator.drop(takeSize / 10).take(takeSize).toIndexedSeq
@@ -329,6 +337,7 @@ object Segmentation {
     val maxVal = posteriorEvaluator.logValue(max)
 
     println(s"MAX theta: $maxVal")
+	best_prob_ever = maxVal
     max
   }
 
