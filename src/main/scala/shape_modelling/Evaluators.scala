@@ -8,9 +8,9 @@ import scalismo.statisticalmodel.NDimensionalNormalDistribution
 import scalismo.statisticalmodel.asm.{ActiveShapeModel, PreprocessedImage}
 import shape_modelling.MCMC.ShapeParameters
 
-object IntensityBasedLikelyhoodEvaluators {
-  case class IntensityBasedLikeliHoodEvaluatorForShapeFitting(asm: ActiveShapeModel, preprocessedImage: PreprocessedImage,
-                                                                 sdev: Double = 0.5) extends DistributionEvaluator[ShapeParameters] {
+object Evaluators {
+  case class Shape_evaluator(asm: ActiveShapeModel, preprocessedImage: PreprocessedImage,
+                             sdev: Double = 0.5) extends DistributionEvaluator[ShapeParameters] {
 
     val uncertainty = NDimensionalNormalDistribution(Vector3D(0f, 0f, 0f), SquareMatrix.eye[_3D] * (sdev * sdev))
 
@@ -20,8 +20,8 @@ object IntensityBasedLikelyhoodEvaluators {
     }
   }
 
-  case class IntensityBasedLikeliHoodEvaluatorForRigidFitting(asm: ActiveShapeModel, preprocessedImage: PreprocessedImage,
-                                                              sdev: Double = 0.5) extends DistributionEvaluator[ShapeParameters] {
+  case class Pose_aware_evaluator(asm: ActiveShapeModel, preprocessedImage: PreprocessedImage,
+                                  sdev: Double = 0.5) extends DistributionEvaluator[ShapeParameters] {
 
     val uncertainty = NDimensionalNormalDistribution(Vector3D(0f, 0f, 0f), SquareMatrix.eye[_3D] * (sdev * sdev))
 
@@ -41,8 +41,8 @@ object IntensityBasedLikelyhoodEvaluators {
     }
   }
 
-  case class IntensityBasedLikeliHoodEvaluatorForRigidFittingFast(asm: ActiveShapeModel, preprocessedImage: PreprocessedImage,
-                                                              sdev: Double = 0.5) extends DistributionEvaluator[ShapeParameters] {
+  case class Pose_aware_evaluator_fast(asm: ActiveShapeModel, preprocessedImage: PreprocessedImage,
+                                       sdev: Double = 0.5) extends DistributionEvaluator[ShapeParameters] {
 
     val uncertainty = NDimensionalNormalDistribution(Vector3D(0f, 0f, 0f), SquareMatrix.eye[_3D] * (sdev * sdev))
 

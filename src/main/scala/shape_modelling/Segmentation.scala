@@ -19,7 +19,7 @@ import scalismo.sampling.{DistributionEvaluator, ProposalGenerator}
 import scalismo.statisticalmodel.asm.{ActiveShapeModel, PreprocessedImage}
 import scalismo.ui.ShapeModelView
 import scalismo.ui.api.SimpleAPI.ScalismoUI
-import shape_modelling.IntensityBasedLikelyhoodEvaluators.IntensityBasedLikeliHoodEvaluatorForRigidFittingFast
+import shape_modelling.Evaluators.Pose_aware_evaluator_fast
 import shape_modelling.MCMC._
 
 import scala.collection.mutable.ListBuffer
@@ -78,30 +78,19 @@ object Segmentation {
     asm_lms = LandmarkIO.readLandmarksJson[_3D](new File(s"$handedDataRootPath/femur-landmarks.json")).get
     target_lms = LandmarkIO.readLandmarksJson[_3D](new File(s"$handedDataRootPath/$targetname.json")).get
 
-
-    // create a visualization window
-    if (useUI) {
-      ui = ScalismoUI()
-    }
-
     // Read data
     asm = ActiveShapeModelIO.readActiveShapeModel(new File(s"$handedDataRootPath/$femurAsmFile")).get
     val image = ImageIO.read3DScalarImage[Short](new File(s"$handedDataRootPath/$targetname.nii")).get.map(_.toFloat)
 
     if (useUI) {
+      ui = ScalismoUI()
       ui.show(asm.statisticalModel, "model_updating")
       ui.show(image, "CT")
       if (targetname.split("/")(0) == "test") {
         ui.show(MeshIO.readMesh(new File(s"$handedDataRootPath/$targetname.stl")).get, "reference femur mesh")
       }
-    }
-
-    if (useUI) {
       ui.addLandmarksTo(asm_lms, "model_updating")
       ui.addLandmarksTo(target_lms, "CT")
-    }
-
-    if (useUI) {
       asm_lms = ui.getLandmarksOf("model_updating").get
       target_lms = ui.getLandmarksOf("CT").get
     }
@@ -119,13 +108,18 @@ object Segmentation {
     
     println("Running pose fitting with variances rot/trans " + variance_rot + "/" + variance_trans + " and take_size " + pose_take_size)
 
-    coeffs = runPoseFitting(fast = true, asm, prepImg, coeffs, variance_rot, variance_trans, pose_take_size, 0)
-    val transformationResult = transformModel(center_of_mass, coeffs, asm_lms)
-    coeffs = transformationResult._1
+    // Run initial pose fitting using landmark evaluator.
+    coeffs = runPoseFitting(use_landmarks = true, asm, prepImg, coeffs, variance_rot, variance_trans, pose_take_size*2, 0)
+	  //TODO: put normal pose fitting step here as well
 
-    if (transformationResult._2 != null) {
-      asm_lms = transformationResult._2
-    }
+
+    // Apply coeffs to asm and CoM, then reset transform coeffs.
+    val transformationResult = transformModel(coeffs, asm_lms)
+    coeffs = transformationResult._1
+    asm_lms = transformationResult._2
+
+
+
 
     println("-----------------------------Saving pose fitted ASM--------------------------------------")
 
@@ -139,25 +133,22 @@ object Segmentation {
     println("-----------------------------Doing Shape fitting--------------------------------------")
 
     // We work with the pose fitted ASM now, so reset the coefficients
-    //		if (load_fitted_asm) {
-    //		  asm = ActiveShapeModelIO.readActiveShapeModel(new File(s"$handedDataRootPath/femur-asm_pose_fitted.h5")).get
-    //		}
+    //if (load_fitted_asm) {
+    //  asm = ActiveShapeModelIO.readActiveShapeModel(new File(s"$handedDataRootPath/femur-asm_pose_fitted.h5")).get
+    //}
     // For single version, set i<-1 to 1 and give large enough take_size as program arguments.
     for (i <- 1 to 10) {
-      var rotSt = (variance_rot.toDouble / (10 * i * decayParam.toDouble)).toFloat
-      var transSt = (variance_trans.toDouble / (10 * i * decayParam.toDouble)).toFloat
-      val variance = (shapeStDev.toDouble / (i * decayParam.toDouble)).toFloat
-      println(s"stDevRot: $rotSt, stDevTrans: $transSt")
+		var rotSt = (variance_rot.toDouble / (10 * i * decayParam.toDouble)).toFloat
+		var transSt = (variance_trans.toDouble / (10 * i * decayParam.toDouble)).toFloat
+		val variance = (shapeStDev.toDouble / (i * decayParam.toDouble)).toFloat
+		println(s"stDevRot: $rotSt, stDevTrans: $transSt")
 
-      coeffs = runShapeFitting(asm, prepImg, coeffs, variance, shapeTakeSize)
-      coeffs = runPoseFitting(fast = false, asm, prepImg, coeffs, rotSt, transSt, pose_take_size / 5, 0)
+		coeffs = runShapeFitting(asm, prepImg, coeffs, variance, shapeTakeSize)
+		coeffs = runPoseFitting(use_landmarks = false, asm, prepImg, coeffs, rotSt, transSt, pose_take_size / 2, 0)
 
-      var curr_pose_coefs = center_of_mass + coeffs.translationParameters
-      current_CoM = new Point3D(curr_pose_coefs.valueAt(0), curr_pose_coefs.valueAt(1), curr_pose_coefs.valueAt(2))
-      rigidTransSpace = RigidTransformationSpace[_3D](current_CoM)
-      rigidtrans = rigidTransSpace.transformForParameters(DenseVector.vertcat(coeffs.translationParameters, coeffs.rotationParameters))
-      asm = asm.transform(rigidtrans)
-      coeffs = ShapeParameters(DenseVector.zeros(3), DenseVector.zeros(3), coeffs.modelCoefficients)
+		//Between pose fitting and shape fitting, we need to apply the transform coefficients. LMs are ignored at this point
+		// (they're only used for the initial fitting, as they're not very accurate)
+		coeffs = transformModel(coeffs)._1
     }
 
     if (useUI) {
@@ -165,7 +156,7 @@ object Segmentation {
       ui.show(asm.statisticalModel, "model_updating")
     }
 
-    coeffs = ShapeParameters(DenseVector.zeros[Float](3), DenseVector.zeros[Float](3), asm.statisticalModel.coefficients(asm.statisticalModel.mean))
+    //coeffs = ShapeParameters(DenseVector.zeros[Float](3), DenseVector.zeros[Float](3), asm.statisticalModel.coefficients(asm.statisticalModel.mean))
 
     println("-----------------Shape Fitting done--------------------------")
     // Saving coefficient vectors and resulting mesh.
@@ -178,8 +169,9 @@ object Segmentation {
     Files.write(Paths.get(s"test_coeffs_for_$targetname.txt"), result.getBytes(StandardCharsets.UTF_8))
     var final_mesh = asm.statisticalModel.instance(coeffs.modelCoefficients)
 
-    // This time we need to transform using the CoM of the NEW asm, i.e. of the pose_fitted_asm
-    calculate_CoM(asm)
+	//This seems to be unnecessary now, as after each shape fitting iteration, the model is transformed.
+    /* This time we need to transform using the CoM of the NEW asm, i.e. of the pose_fitted_asm
+    //calculate_CoM(asm)
 
     // Figure out transform based on coeffs from the shape fitting phase. They should be all 0 right now, but if we ever introduce pose fitting stuff
     // into the shape fitting phase, this here will come in handy.
@@ -188,8 +180,11 @@ object Segmentation {
     rigidTransSpace = RigidTransformationSpace[_3D](current_CoM)
     rigidtrans = rigidTransSpace.transformForParameters(DenseVector.vertcat(coeffs.translationParameters, coeffs.rotationParameters))
 
-    final_mesh = final_mesh.transform(rigidtrans)
-    MeshIO.writeMesh(final_mesh, new File(s"$handedDataRootPath/final_mesh.stl"))
+    final_mesh = final_mesh.transform(rigidtrans)*/
+
+
+
+    MeshIO.writeMesh(final_mesh, new File(s"$handedDataRootPath/final_mesh_$targetname.stl"))
 
     println("-----------------Finished writing results--------------------------")
   }
@@ -209,7 +204,7 @@ object Segmentation {
     center_of_mass = center.map { i: Float => i / asm.statisticalModel.mean.numberOfPoints }.toBreezeVector
   }
 
-  def runPoseFitting(fast: Boolean, asm: ActiveShapeModel, prepImg: PreprocessedImage, initialParameters: ShapeParameters, variance_rot: Float, variance_trans: Float, takeSize: Int, use_correspondence: Int): ShapeParameters = {
+  def runPoseFitting(use_landmarks: Boolean, asm: ActiveShapeModel, prepImg: PreprocessedImage, initialParameters: ShapeParameters, variance_rot: Float, variance_trans: Float, takeSize: Int, use_correspondence: Int): ShapeParameters = {
     //val samples = UniformSampler(image.domain.boundingBox, 1000).sample.map(i => i._1)
 
     val logger = new AcceptRejectLogger[ShapeParameters] {
@@ -246,14 +241,14 @@ object Segmentation {
     //Use_correspondence: 0 for intensity evaluator, 1 for corr.evaluator, 2 for both
     var posteriorEvaluator: DistributionEvaluator[ShapeParameters] = null
 
-    if (fast) {
+    if (use_landmarks) {
       val modelLmIds = asm_lms.map(l => asm.statisticalModel.mean.pointId(l.point).get)
       val targetPoints = target_lms.map(l => l.point)
       val correspondences = modelLmIds.zip(targetPoints)
 
       posteriorEvaluator = CorespondenceBasedEvaluator(asm.statisticalModel, correspondences, 1.0)
     } else {
-      posteriorEvaluator = IntensityBasedLikelyhoodEvaluators.IntensityBasedLikeliHoodEvaluatorForRigidFitting(asm, prepImg)
+      posteriorEvaluator = Evaluators.Pose_aware_evaluator(asm, prepImg)
     }
 
     val positionGenerator = MixtureProposal.fromProposalsWithTransition((0.1, RotationUpdateProposal(variance_rot)), (0.4, RotationUpdateProposal(variance_rot)), (0.4, TranslationUpdateProposal(variance_trans)), (0.1, TranslationUpdateProposal(variance_trans * 4)))(rnd = new Random())
@@ -313,7 +308,7 @@ object Segmentation {
 
     System.out.println("Running runShapeFitting...")
 
-    val posteriorEvaluator = ProductEvaluator(MCMC.ShapePriorEvaluator(asm.statisticalModel), IntensityBasedLikelyhoodEvaluators.IntensityBasedLikeliHoodEvaluatorForShapeFitting(asm, prepImg))
+    val posteriorEvaluator = ProductEvaluator(MCMC.ShapePriorEvaluator(asm.statisticalModel), Evaluators.Shape_evaluator(asm, prepImg))
     // Deviations should match deviations of model
     val poseGenerator = MixtureProposal.fromProposalsWithTransition((1.0, ShapeUpdateProposal(asm.statisticalModel.rank, variance)))(rnd = new Random())
 
@@ -367,9 +362,9 @@ object Segmentation {
     var posteriorEvaluator: DistributionEvaluator[ShapeParameters] = null
 
     if (fast) {
-      posteriorEvaluator = IntensityBasedLikeliHoodEvaluatorForRigidFittingFast(asm, prepImg)
+      posteriorEvaluator = Pose_aware_evaluator_fast(asm, prepImg)
     } else {
-      posteriorEvaluator = IntensityBasedLikelyhoodEvaluators.IntensityBasedLikeliHoodEvaluatorForRigidFitting(asm, prepImg)
+      posteriorEvaluator = Evaluators.Pose_aware_evaluator(asm, prepImg)
     }
 
     val positionGenerator = MixtureProposal.fromProposalsWithTransition((0.8, RotationUpdateProposalX(variance_rot)), (0.2, RotationUpdateProposalX(variance_rot * 2)))(rnd = new Random())
@@ -429,9 +424,9 @@ object Segmentation {
     var posteriorEvaluator: DistributionEvaluator[ShapeParameters] = null
 
     if (fast) {
-      posteriorEvaluator = IntensityBasedLikeliHoodEvaluatorForRigidFittingFast(asm, prepImg)
+      posteriorEvaluator = Pose_aware_evaluator_fast(asm, prepImg)
     } else {
-      posteriorEvaluator = IntensityBasedLikelyhoodEvaluators.IntensityBasedLikeliHoodEvaluatorForRigidFitting(asm, prepImg)
+      posteriorEvaluator = Evaluators.Pose_aware_evaluator(asm, prepImg)
     }
 
     val positionGenerator = MixtureProposal.fromProposalsWithTransition((0.8, TranslationUpdateProposal(variance_trans)), (0.2, TranslationUpdateProposal(variance_trans * 4)))(rnd = new Random())
@@ -484,7 +479,7 @@ object Segmentation {
 
     println("Running runShapeFittingForFirstComponents till..." + tillComponentIndex)
 
-    val posteriorEvaluator = ProductEvaluator(MCMC.ShapePriorEvaluator(asm.statisticalModel), IntensityBasedLikelyhoodEvaluators.IntensityBasedLikeliHoodEvaluatorForShapeFitting(asm, prepImg))
+    val posteriorEvaluator = ProductEvaluator(MCMC.ShapePriorEvaluator(asm.statisticalModel), Evaluators.Shape_evaluator(asm, prepImg))
 
     // Deviations should match deviations of model
     val poseGenerator = MixtureProposal.fromProposalsWithTransition((0.8, ShapeUpdateProposalFirstComponents(asm.statisticalModel.rank, 0.09f, tillComponentIndex)), (0.2, ShapeUpdateProposalFirstComponents(asm.statisticalModel.rank, 0.2f, tillComponentIndex)))(rnd = new Random())
@@ -528,7 +523,7 @@ object Segmentation {
 
     System.out.println("Running runShapeFitting...")
 
-    val posteriorEvaluator = ProductEvaluator(MCMC.ShapePriorEvaluator(asm.statisticalModel), IntensityBasedLikelyhoodEvaluators.IntensityBasedLikeliHoodEvaluatorForShapeFitting(asm, prepImg))
+    val posteriorEvaluator = ProductEvaluator(MCMC.ShapePriorEvaluator(asm.statisticalModel), Evaluators.Shape_evaluator(asm, prepImg))
 
     // Deviations should match deviations of model
     val poseGenerator = MixtureProposal.fromProposalsWithTransition((0.7, ShapeUpdateProposal(asm.statisticalModel.rank, 0.1f)))(rnd = new Random())
@@ -546,13 +541,14 @@ object Segmentation {
     samples.maxBy(posteriorEvaluator.logValue)
   }
 
-  def transformModel(center_of_mass: DenseVector[Float], coeffs: ShapeParameters, landmarks: Seq[Landmark[_3D]] = null): (ShapeParameters, Seq[Landmark[_3D]]) = {
-    var curr_pose_coefs = center_of_mass + coeffs.translationParameters
-    var current_CoM = new Point3D(curr_pose_coefs.valueAt(0), curr_pose_coefs.valueAt(1), curr_pose_coefs.valueAt(2))
+  def transformModel(coeffs: ShapeParameters, landmarks: Seq[Landmark[_3D]] = null): (ShapeParameters, Seq[Landmark[_3D]]) = {
+    var translated_CoM_vector = center_of_mass + coeffs.translationParameters
+    var current_CoM = new Point3D(translated_CoM_vector.valueAt(0), translated_CoM_vector.valueAt(1), translated_CoM_vector.valueAt(2))
     var rigidTransSpace = RigidTransformationSpace[_3D](current_CoM)
     var rigidtrans = rigidTransSpace.transformForParameters(DenseVector.vertcat(coeffs.translationParameters, coeffs.rotationParameters))
 
     asm = asm.transform(rigidtrans)
+	center_of_mass = translated_CoM_vector
 
     val newLms: ListBuffer[Landmark[_3D]] = ListBuffer()
 
