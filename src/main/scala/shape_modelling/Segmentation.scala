@@ -138,7 +138,7 @@ object Segmentation {
     for (i <- 1 to 3) {
 		var rotSt = (variance_rot.toDouble / (10 * i * decayParam.toDouble)).toFloat
 		var transSt = (variance_trans.toDouble / (10 * i * decayParam.toDouble)).toFloat
-		val variance = (shapeStDev.toDouble / (i*i * decayParam.toDouble)).toFloat
+		val variance = (shapeStDev.toDouble / (i * decayParam.toDouble)).toFloat
 		println(s"stDevRot: $rotSt, stDevTrans: $transSt")
 
 		coeffs = runShapeFitting(asm, prepImg, coeffs, variance, shapeTakeSize)
@@ -167,6 +167,7 @@ object Segmentation {
       result += args(i).toString + " "
 
     }
+	result += "\nProbability of fitted mesh: " + best_prob_ever
     Files.write(Paths.get(s"test_coeffs_for_$targetname.txt"), result.getBytes(StandardCharsets.UTF_8))
     var final_mesh = asm.statisticalModel.instance(coeffs.modelCoefficients)
 
