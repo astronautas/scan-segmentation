@@ -158,7 +158,7 @@ object Segmentation {
     //coeffs = ShapeParameters(DenseVector.zeros[Float](3), DenseVector.zeros[Float](3), asm.statisticalModel.coefficients(asm.statisticalModel.mean))
 
     println("-----------------Shape Fitting done--------------------------")
-    coeffs = transformModel(coeffs)._1
+    //coeffs = transformModel(coeffs)._1
 
     // Saving coefficient vectors and resulting mesh.
     var result = coeffs.rotationParameters.toString() + "\n" + coeffs.translationParameters.toString() + "\n" + coeffs.modelCoefficients.toString() + "\n"
@@ -171,21 +171,13 @@ object Segmentation {
     Files.write(Paths.get(s"test_coeffs_for_$targetname.txt"), result.getBytes(StandardCharsets.UTF_8))
     var final_mesh = asm.statisticalModel.instance(coeffs.modelCoefficients)
 
-    //This seems to be unnecessary now, as after each shape fitting iteration, the model is transformed.
-    /* This time we need to transform using the CoM of the NEW asm, i.e. of the pose_fitted_asm
-    //calculate_CoM(asm)
+    val final_CoM_vector = center_of_mass + coeffs.translationParameters
+    current_CoM = new Point3D(final_CoM_vector.valueAt(0), final_CoM_vector.valueAt(1), final_CoM_vector.valueAt(2))
 
-    // Figure out transform based on coeffs from the shape fitting phase. They should be all 0 right now, but if we ever introduce pose fitting stuff
-    // into the shape fitting phase, this here will come in handy.
-    var current_translation_coeffs = center_of_mass + coeffs.translationParameters
-    current_CoM = new Point3D(current_translation_coeffs.valueAt(0), current_translation_coeffs.valueAt(1), current_translation_coeffs.valueAt(2))
     rigidTransSpace = RigidTransformationSpace[_3D](current_CoM)
     rigidtrans = rigidTransSpace.transformForParameters(DenseVector.vertcat(coeffs.translationParameters, coeffs.rotationParameters))
 
-    final_mesh = final_mesh.transform(rigidtrans)*/
-
-
-
+    final_mesh = final_mesh.transform(rigidtrans)
     MeshIO.writeMesh(final_mesh, new File(s"$handedDataRootPath/final_mesh_$targetname.stl"))
 
     println("-----------------Finished writing results--------------------------")
